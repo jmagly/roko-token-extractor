@@ -223,7 +223,7 @@
             </div>
 
             <h3>Raw JSON Data</h3>
-            <textarea id="jsonData" readonly style="width: 100%; height: 400px; font-family: 'Courier New', monospace; background: white; color: black; padding: 15px; border-radius: 10px; border: 4px solid black; resize: vertical; white-space: pre; overflow: auto;">Loading...</textarea>
+            <textarea id="jsonData" readonly style="width: calc(100% - 38px); height: 400px; font-family: 'Courier New', monospace; background: white; color: black; padding: 15px; border-radius: 10px; border: 4px solid black; resize: vertical; white-space: pre; overflow: auto; box-sizing: content-box;">Loading...</textarea>
 
             <button class="refresh-btn" style="margin-top: 10px;" onclick="copyToClipboard()">Copy JSON</button>
             <span id="copyStatus" style="margin-left: 10px; color: black; font-weight: bold; display: none;">✓ Copied!</span>
@@ -300,15 +300,16 @@ fetch('<span id="apiUrl"></span>')
                 document.getElementById('volume7d').textContent =
                     '$' + data.volume.volume_7d_usd;
 
-                // Update additional stats
+                // Update additional stats with proper formatting
+                // For large whole numbers, show integers only with commas
                 document.getElementById('totalSupply').textContent =
-                    parseFloat(data.token.total_supply).toLocaleString();
+                    Math.floor(parseFloat(data.token.total_supply)).toLocaleString();
                 document.getElementById('circSupply').textContent =
-                    parseFloat(data.token.circulating_supply).toLocaleString();
+                    Math.floor(parseFloat(data.token.circulating_supply)).toLocaleString();
                 document.getElementById('treasuryPct').textContent =
                     data.token.treasury_percentage + '%';
                 document.getElementById('ethRatio').textContent =
-                    parseFloat(data.pricing.token_eth_ratio).toLocaleString(undefined, {maximumFractionDigits: 0});
+                    Math.floor(parseFloat(data.pricing.token_eth_ratio)).toLocaleString();
                 document.getElementById('poolCount').textContent =
                     data.tvl.pools_count;
                 document.getElementById('ethUsdPrice').textContent =
@@ -317,9 +318,19 @@ fetch('<span id="apiUrl"></span>')
                 // Update raw JSON display
                 document.getElementById('jsonData').value = JSON.stringify(data, null, 2);
 
-                // Update last updated
+                // Update last updated with local timezone conversion
+                const utcDate = new Date(data.datetime + 'Z'); // Add Z to ensure UTC parsing
+                const localDateString = utcDate.toLocaleString(undefined, {
+                    year: 'numeric',
+                    month: 'short',
+                    day: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit',
+                    second: '2-digit',
+                    timeZoneName: 'short'
+                });
                 document.getElementById('lastUpdated').textContent =
-                    'Last Updated: ' + data.last_updated;
+                    'Last Updated: ' + localDateString;
 
                 // Update cache status
                 document.getElementById('cacheStatus').innerHTML =
