@@ -103,9 +103,9 @@ class ROKODataExtractor:
             return {}
     
     def extract_pool_data(self) -> List[Dict[str, Any]]:
-        """Extract liquidity pool data."""
+        """Extract TVL pool data."""
         try:
-            self.logger.info("Extracting liquidity pool data...")
+            self.logger.info("Extracting TVL pool data...")
             
             # Find ROKO pools
             pools = self.pool_monitor.find_roko_pools()
@@ -369,7 +369,7 @@ class ROKODataExtractor:
             # Pool summary
             pool_summary = summary.get('summary', {})
             print(f"\nPools: {pool_summary.get('total_pools', 0)}")
-            print(f"Total Liquidity: {pool_summary.get('total_liquidity_usd', 0):,.2f} USD")
+            print(f"Total TVL: {pool_summary.get('total_tvl_usd', 0):,.2f} USD")
             print(f"24h Volume: {pool_summary.get('total_volume_24h_usd', 0):,.2f} USD")
             
             print("="*60)

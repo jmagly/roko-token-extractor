@@ -110,7 +110,7 @@ class DataValidator:
             True if valid, False otherwise
         """
         try:
-            required_fields = ['pool_address', 'reserves', 'liquidity_usd']
+            required_fields = ['pool_address', 'reserves', 'tvl_usd']
             
             for field in required_fields:
                 if field not in pool_data:
@@ -129,7 +129,7 @@ class DataValidator:
                 return False
             
             # Validate numeric values
-            numeric_fields = ['liquidity_usd', 'volume_24h', 'fees_24h']
+            numeric_fields = ['tvl_usd', 'volume_24h', 'fees_24h']
             for field in numeric_fields:
                 if field in pool_data and not isinstance(pool_data[field], (int, float)):
                     self.logger.error(f"Invalid {field} data type")

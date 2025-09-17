@@ -132,7 +132,7 @@ def extract_roko_data():
         logger.info("Extracting pool data...")
         pools = pool_monitor.find_roko_pools()
         pool_data = []
-        total_liquidity = 0
+        total_tvl = 0
         total_volume_24h = 0
         
         # Get ETH price once to avoid redundant calculations
@@ -142,7 +142,7 @@ def extract_roko_data():
             try:
                 # Get pool reserves and basic info
                 reserves = pool_monitor.get_pool_reserves(pool['address'])
-                liquidity = pool_monitor.get_pool_liquidity(pool['address'])
+                tvl = pool_monitor.get_pool_tvl(pool['address'])
                 volume = pool_monitor.get_pool_volume(pool['address'])
                 
                 # Get token decimals (assuming 18 for both tokens in Uniswap V2)
@@ -157,7 +157,7 @@ def extract_roko_data():
                         'reserve0': reserves['reserve0'] / (10 ** token_decimals),
                         'reserve1': reserves['reserve1'] / (10 ** token_decimals)
                     },
-                    'liquidity_usd': liquidity,
+                    'tvl_usd': tvl,
                     'volume_24h_usd': volume.get('volume_24h_usd', 0),
                     'volume_7d_usd': volume.get('volume_7d_usd', 0),
                     'volume_30d_usd': volume.get('volume_30d_usd', 0),
@@ -167,7 +167,7 @@ def extract_roko_data():
                 }
                 
                 pool_data.append(pool_info)
-                total_liquidity += liquidity
+                total_tvl += tvl
                 total_volume_24h += volume.get('volume_24h_usd', 0)
                 
             except Exception as e:
@@ -198,8 +198,8 @@ def extract_roko_data():
                 'total_market_cap_usd': format_precision((usd_per_token * total_supply_formatted) if usd_per_token and total_supply_formatted > 0 else 0, 2),
                 'price_source': pricing_data.get('price_source', 'unknown')
             },
-            'liquidity': {
-                'total_liquidity_usd': format_precision(total_liquidity, 2),
+            'tvl': {
+                'total_tvl_usd': format_precision(total_tvl, 2),
                 'pools_count': len(pool_data),
                 'pools': pool_data
             },
@@ -214,7 +214,7 @@ def extract_roko_data():
             'summary': {
                 'status': 'success',
                 'extraction_time': datetime.now().isoformat(),
-                'data_quality': 'high' if total_liquidity > 0 else 'medium'
+                'data_quality': 'high' if total_tvl > 0 else 'medium'
             }
         }
         
@@ -367,7 +367,7 @@ def main():
             if 'token' in data and 'error' not in data:
                 token = data['token']
                 pricing = data.get('pricing', {})
-                liquidity = data.get('liquidity', {})
+                tvl = data.get('tvl', {})
                 volume = data.get('volume', {})
                 
                 logger.info(f"Token: {token.get('name', 'N/A')} ({token.get('symbol', 'N/A')})")
@@ -379,9 +379,9 @@ def main():
                 logger.info(f"Price: ${format_display(pricing.get('usd_per_token', '0'))} USD per {token_symbol}")
                 logger.info(f"Market Cap: ${format_display(pricing.get('market_cap_usd', '0'), is_currency=True)}")
                 logger.info(f"Total Market Cap: ${format_display(pricing.get('total_market_cap_usd', '0'), is_currency=True)}")
-                logger.info(f"Liquidity: ${format_display(liquidity.get('total_liquidity_usd', '0'), is_currency=True)}")
+                logger.info(f"TVL: ${format_display(tvl.get('total_tvl_usd', '0'), is_currency=True)}")
                 logger.info(f"24h Volume: ${format_display(volume.get('volume_24h_usd', '0'), is_currency=True)}")
-                logger.info(f"Pools: {liquidity.get('pools_count', 0)}")
+                logger.info(f"Pools: {tvl.get('pools_count', 0)}")
             else:
                 logger.error("ERROR: Data extraction failed")
         else:

@@ -138,8 +138,8 @@ class DataProcessor:
                     'token0_address': pool_data.get('reserves', {}).get('token0', ''),
                     'token1_address': pool_data.get('reserves', {}).get('token1', '')
                 },
-                'liquidity': {
-                    'total_liquidity_usd': f"${pool_data.get('liquidity_usd', 0):,.2f}"
+                'tvl': {
+                    'total_tvl_usd': f"${pool_data.get('tvl_usd', 0):,.2f}"
                 },
                 'trading': {
                     'volume_24h': f"${pool_data.get('volume_24h', 0):,.2f}",
@@ -165,7 +165,7 @@ class DataProcessor:
             Summary report
         """
         try:
-            total_liquidity = sum(pool.get('liquidity_usd', 0) for pool in pool_data)
+            total_tvl = sum(pool.get('tvl_usd', 0) for pool in pool_data)
             total_volume_24h = sum(pool.get('volume_24h', 0) for pool in pool_data)
             total_fees_24h = sum(pool.get('fees_24h', 0) for pool in pool_data)
             
@@ -173,7 +173,7 @@ class DataProcessor:
                 'timestamp': datetime.now().isoformat(),
                 'summary': {
                     'total_pools': len(pool_data),
-                    'total_liquidity_usd': total_liquidity,
+                    'total_tvl_usd': total_tvl,
                     'total_volume_24h_usd': total_volume_24h,
                     'total_fees_24h_usd': total_fees_24h
                 },

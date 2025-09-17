@@ -209,8 +209,8 @@ class UniswapPoolMonitor:
             self.logger.error(f"Error getting pool reserves for {pool_address}: {e}")
             raise
     
-    def get_pool_liquidity(self, pool_address: str) -> float:
-        """Get total liquidity value in USD (simplified calculation)."""
+    def get_pool_tvl(self, pool_address: str) -> float:
+        """Get total value locked (TVL) in USD (simplified calculation)."""
         try:
             reserves = self.get_pool_reserves(pool_address)
             
@@ -227,13 +227,13 @@ class UniswapPoolMonitor:
             reserve0_formatted = reserves['reserve0'] / (10 ** 18)
             reserve1_formatted = reserves['reserve1'] / (10 ** 18)
             
-            # Calculate liquidity (simplified)
-            liquidity_usd = reserve1_formatted * eth_price * 2  # Rough estimate
+            # Calculate TVL (simplified)
+            tvl_usd = reserve1_formatted * eth_price * 2  # Rough estimate
             
-            return liquidity_usd
+            return tvl_usd
             
         except Exception as e:
-            self.logger.error(f"Error calculating pool liquidity: {e}")
+            self.logger.error(f"Error calculating pool TVL: {e}")
             return 0.0
     
     def get_pool_volume_alchemy(self, pool_address: str, days: int = 1) -> Dict[str, Any]:
@@ -522,14 +522,14 @@ class UniswapPoolMonitor:
         """Get comprehensive pool data."""
         try:
             reserves = self.get_pool_reserves(pool_address)
-            liquidity = self.get_pool_liquidity(pool_address)
+            tvl = self.get_pool_tvl(pool_address)
             volume_24h = self.get_trading_volume_24h(pool_address)
             fees_24h = self.get_pool_fees_24h(pool_address)
             
             return {
                 'pool_address': pool_address,
                 'reserves': reserves,
-                'liquidity_usd': liquidity,
+                'tvl_usd': tvl,
                 'volume_24h': volume_24h,
                 'fees_24h': fees_24h,
                 'timestamp': self.rpc_client.web3.eth.get_block('latest').timestamp
