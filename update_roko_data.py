@@ -8,6 +8,7 @@ import json
 import time
 import sys
 import logging
+import argparse
 from datetime import datetime
 from pathlib import Path
 from typing import Dict, Any, Optional
@@ -231,43 +232,42 @@ def extract_roko_data():
             'status': 'error'
         }
 
-def save_web_data(data):
+def save_web_data(data, output_dir="web_delivery", filename="latest.json", create_timestamped=True):
     """Save data to web delivery directory."""
     logger = logging.getLogger(__name__)
     
     try:
-        # Create web delivery directory
-        web_dir = Path("web_delivery")
-        web_dir.mkdir(exist_ok=True)
-        
-        # Create filename with timestamp
-        timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
-        filename = f"roko_data_{timestamp}.json"
-        filepath = web_dir / filename
+        # Create output directory
+        web_dir = Path(output_dir)
+        web_dir.mkdir(parents=True, exist_ok=True)
         
         # Save main data file
-        with open(filepath, 'w') as f:
+        main_filepath = web_dir / filename
+        with open(main_filepath, 'w') as f:
             json.dump(data, f, indent=2)
         
-        # Also save as 'latest.json' for easy access
-        latest_filepath = web_dir / "latest.json"
-        with open(latest_filepath, 'w') as f:
-            json.dump(data, f, indent=2)
+        logger.info(f"Main data saved to: {main_filepath}")
         
-        logger.info(f"Web data saved to: {filepath}")
-        logger.info(f"Latest data saved to: {latest_filepath}")
+        # Create timestamped file if requested
+        if create_timestamped:
+            timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+            timestamped_filename = f"roko_data_{timestamp}.json"
+            timestamped_filepath = web_dir / timestamped_filename
+            with open(timestamped_filepath, 'w') as f:
+                json.dump(data, f, indent=2)
+            logger.info(f"Timestamped data saved to: {timestamped_filepath}")
         
-        return str(filepath)
+        return str(main_filepath)
         
     except Exception as e:
         logger.error(f"Error saving web data: {e}")
         return ""
 
-def export_price_data(data: Dict[str, Any], token_symbol: str, logger):
+def export_price_data(data: Dict[str, Any], token_symbol: str, logger, export_dir="data/exports"):
     """Export price data to a dedicated file."""
     try:
-        # Create data/exports directory if it doesn't exist
-        export_dir = Path("data/exports")
+        # Create exports directory if it doesn't exist
+        export_dir = Path(export_dir)
         export_dir.mkdir(parents=True, exist_ok=True)
         
         # Extract pricing data
@@ -340,12 +340,32 @@ def export_price_data(data: Dict[str, Any], token_symbol: str, logger):
 
 def main():
     """Main function."""
+    # Parse command line arguments
+    parser = argparse.ArgumentParser(description='ROKO Data Update Script for Web Delivery')
+    parser.add_argument('--output-dir', '-o', 
+                       default='web_delivery',
+                       help='Output directory for JSON files (default: web_delivery)')
+    parser.add_argument('--export-dir', '-e',
+                       default='data/exports', 
+                       help='Export directory for CSV/JSON exports (default: data/exports)')
+    parser.add_argument('--filename', '-f',
+                       default='latest.json',
+                       help='Main output filename (default: latest.json)')
+    parser.add_argument('--timestamped', '-t',
+                       action='store_true',
+                       help='Also create timestamped file')
+    
+    args = parser.parse_args()
+    
     logger = setup_logging()
     
     try:
         logger.info("="*60)
         logger.info("ROKO Data Update Script Started")
         logger.info("="*60)
+        logger.info(f"Output directory: {args.output_dir}")
+        logger.info(f"Export directory: {args.export_dir}")
+        logger.info(f"Main filename: {args.filename}")
         
         # Get token symbol for display
         config = Config()
@@ -355,10 +375,10 @@ def main():
         data = extract_roko_data()
         
         # Save to web directory
-        filepath = save_web_data(data)
+        filepath = save_web_data(data, args.output_dir, args.filename, args.timestamped)
         
         # Export price data
-        export_price_data(data, token_symbol, logger)
+        export_price_data(data, token_symbol, logger, args.export_dir)
         
         if filepath:
             logger.info("SUCCESS: Data update completed successfully")
