@@ -361,10 +361,11 @@ fetch('<span id="apiUrl"></span>')
                 document.getElementById('lastUpdated').textContent =
                     'Last Updated: ' + localDateString;
 
-                // Update cache status
+                // Update cache status with truncated ETag
+                const truncatedEtag = newEtag ? newEtag.substring(1, 9) + '...' : 'N/A';
                 document.getElementById('cacheStatus').innerHTML =
                     `<br><strong>✅ Cache Status:</strong> Fresh data fetched<br>` +
-                    `<strong>ETag:</strong> ${newEtag || 'N/A'}`;
+                    `<strong>ETag:</strong> ${truncatedEtag}`;
 
                 status.textContent = 'Live';
                 status.className = 'status';
