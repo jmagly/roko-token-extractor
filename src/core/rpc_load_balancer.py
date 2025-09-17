@@ -11,6 +11,7 @@ from enum import Enum
 import requests
 from web3 import Web3
 from web3.exceptions import ContractLogicError
+from utils.rpc_ignore_list import RPCIgnoreList
 
 
 class LoadBalancingStrategy(Enum):
@@ -51,6 +52,7 @@ class RPCLoadBalancer:
         self.providers = []
         self.current_index = 0
         self.config = config
+        self.ignore_list = RPCIgnoreList()
         
         # Initialize providers
         for provider_config in providers:
@@ -87,8 +89,11 @@ class RPCLoadBalancer:
             self._perform_health_checks()
             self.last_health_check = time.time()
         
-        # Filter healthy providers
-        healthy_providers = [p for p in self.providers if p.is_healthy]
+        # Filter healthy providers and exclude ignored ones
+        healthy_providers = [
+            p for p in self.providers 
+            if p.is_healthy and not self.ignore_list.is_ignored(p.url)
+        ]
         
         if not healthy_providers:
             self.logger.error("No healthy RPC providers available")
@@ -105,6 +110,15 @@ class RPCLoadBalancer:
             provider = healthy_providers[0]
         
         return provider
+    
+    def clear_ignore_list(self) -> None:
+        """Clear the ignore list (called when refreshing RPC endpoints from ChainList)."""
+        self.ignore_list.clear_ignore_list()
+        self.logger.info("Cleared RPC ignore list due to endpoint refresh")
+    
+    def get_ignore_list_info(self) -> Dict[str, Any]:
+        """Get information about the current ignore list."""
+        return self.ignore_list.get_ignore_list_info()
     
     def _round_robin_selection(self, providers: List[RPCProvider]) -> RPCProvider:
         """Select provider using round-robin strategy."""
@@ -193,6 +207,24 @@ class RPCLoadBalancer:
                 provider.last_error = str(e)
                 
                 self.logger.warning(f"Request failed with {provider.name}: {e}")
+                
+                # Add to ignore list if it's a non-404 error
+                error_code = None
+                if hasattr(e, 'response') and hasattr(e.response, 'status_code'):
+                    error_code = e.response.status_code
+                elif 'Client Error' in str(e):
+                    # Extract error code from error message
+                    import re
+                    match = re.search(r'(\d{3}) Client Error', str(e))
+                    if match:
+                        error_code = int(match.group(1))
+                
+                if error_code and error_code != 404:
+                    self.ignore_list.add_failing_endpoint(
+                        provider.url, 
+                        error_code, 
+                        str(e)
+                    )
                 
                 # Mark provider as unhealthy if too many errors
                 if provider.error_count >= 5:

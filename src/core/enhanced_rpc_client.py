@@ -12,9 +12,9 @@ from web3.exceptions import ContractLogicError
 from eth_typing import ChecksumAddress
 from hexbytes import HexBytes
 
-from src.config.settings import Config
-from src.utils.data_processor import DataProcessor
-from src.core.rpc_load_balancer import RPCLoadBalancer
+from config.settings import Config
+from utils.data_processor import DataProcessor
+from core.rpc_load_balancer import RPCLoadBalancer
 
 
 class EnhancedEthereumRPCClient:

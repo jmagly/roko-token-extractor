@@ -35,6 +35,19 @@ def update_rpc_config():
         # Load current config
         config = Config("config/config.yaml")
         
+        # Clear ignore list when refreshing RPC endpoints
+        from core.rpc_load_balancer import RPCLoadBalancer
+        from config.settings import Config as ConfigClass
+        
+        # Create a temporary load balancer to clear ignore list
+        temp_config = ConfigClass("config/config.yaml")
+        temp_load_balancer = RPCLoadBalancer(
+            temp_config.ethereum.get('rpc_providers', []),
+            temp_config.ethereum.get('load_balancing', {})
+        )
+        temp_load_balancer.clear_ignore_list()
+        logger.info("Cleared RPC ignore list due to endpoint refresh")
+        
         # Convert RPCs to config format
         new_rpc_providers = []
         for i, rpc in enumerate(rpcs[:20]):  # Limit to top 20

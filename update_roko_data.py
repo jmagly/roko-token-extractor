@@ -10,6 +10,7 @@ import sys
 import logging
 from datetime import datetime
 from pathlib import Path
+from typing import Dict, Any, Optional
 
 # Add src directory to path
 sys.path.append(str(Path(__file__).parent / "src"))
@@ -210,6 +211,75 @@ def save_web_data(data):
         logger.error(f"Error saving web data: {e}")
         return ""
 
+def export_price_data(data: Dict[str, Any], logger):
+    """Export price data to a dedicated file."""
+    try:
+        # Create data/exports directory if it doesn't exist
+        export_dir = Path("data/exports")
+        export_dir.mkdir(parents=True, exist_ok=True)
+        
+        # Extract pricing data
+        pricing = data.get('pricing', {})
+        token = data.get('token', {})
+        
+        # Create price data structure
+        price_data = {
+            'timestamp': data.get('timestamp', int(time.time())),
+            'datetime': data.get('datetime', datetime.now().isoformat()),
+            'token': {
+                'name': token.get('name', 'N/A'),
+                'symbol': token.get('symbol', 'N/A'),
+                'address': token.get('address', 'N/A'),
+                'decimals': token.get('decimals', 'N/A'),
+                'total_supply': token.get('total_supply', 'N/A'),
+                'holders': token.get('holders', 'N/A')
+            },
+            'pricing': {
+                'roko_eth_ratio': pricing.get('roko_eth_ratio', 'N/A'),
+                'eth_per_roko': pricing.get('eth_per_roko', 'N/A'),
+                'usd_per_roko': pricing.get('usd_per_roko', 'N/A'),
+                'eth_price_usd': pricing.get('eth_price_usd', 'N/A'),
+                'market_cap_usd': pricing.get('market_cap_usd', 'N/A'),
+                'price_source': pricing.get('price_source', 'unknown')
+            }
+        }
+        
+        # Generate filename with timestamp
+        timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+        filename = f"roko_price_data_{timestamp}.json"
+        filepath = export_dir / filename
+        
+        # Write to file
+        with open(filepath, 'w') as f:
+            json.dump(price_data, f, indent=2)
+        
+        logger.info(f"Price data exported to: {filepath}")
+        
+        # Also create a CSV version for easy viewing
+        csv_filename = f"roko_price_data_{timestamp}.csv"
+        csv_filepath = export_dir / csv_filename
+        
+        with open(csv_filepath, 'w') as f:
+            f.write("Metric,Value\n")
+            f.write(f"Timestamp,{price_data['datetime']}\n")
+            f.write(f"Token Name,{price_data['token']['name']}\n")
+            f.write(f"Token Symbol,{price_data['token']['symbol']}\n")
+            f.write(f"Token Address,{price_data['token']['address']}\n")
+            f.write(f"Decimals,{price_data['token']['decimals']}\n")
+            f.write(f"Total Supply,{price_data['token']['total_supply']}\n")
+            f.write(f"Holders,{price_data['token']['holders']}\n")
+            f.write(f"ROKO:ETH Ratio,{price_data['pricing']['roko_eth_ratio']}\n")
+            f.write(f"ETH per ROKO,{price_data['pricing']['eth_per_roko']}\n")
+            f.write(f"USD per ROKO,{price_data['pricing']['usd_per_roko']}\n")
+            f.write(f"ETH Price (USD),{price_data['pricing']['eth_price_usd']}\n")
+            f.write(f"Market Cap (USD),{price_data['pricing']['market_cap_usd']}\n")
+            f.write(f"Price Source,{price_data['pricing']['price_source']}\n")
+        
+        logger.info(f"Price data CSV exported to: {csv_filepath}")
+        
+    except Exception as e:
+        logger.error(f"Error exporting price data: {e}")
+
 def main():
     """Main function."""
     logger = setup_logging()
@@ -224,6 +294,9 @@ def main():
         
         # Save to web directory
         filepath = save_web_data(data)
+        
+        # Export price data
+        export_price_data(data, logger)
         
         if filepath:
             logger.info("SUCCESS: Data update completed successfully")
