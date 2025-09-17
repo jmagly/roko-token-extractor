@@ -302,14 +302,27 @@ fetch('<span id="apiUrl"></span>')
 
                 // Update additional stats with proper formatting
                 // For large whole numbers, show integers only with commas
-                document.getElementById('totalSupply').textContent =
-                    Math.floor(parseFloat(data.token.total_supply)).toLocaleString();
-                document.getElementById('circSupply').textContent =
-                    Math.floor(parseFloat(data.token.circulating_supply)).toLocaleString();
+                // Apply smaller font for numbers with >9 digits
+                const formatLargeNumber = (elementId, value) => {
+                    const element = document.getElementById(elementId);
+                    const numValue = Math.floor(parseFloat(value));
+                    const formatted = numValue.toLocaleString();
+                    element.textContent = formatted;
+
+                    // If more than 9 digits (not counting commas), use smaller font
+                    if (numValue >= 1000000000) {
+                        element.style.fontSize = '1.44em'; // 20% smaller than 1.8em
+                    } else {
+                        element.style.fontSize = '1.8em'; // Reset to normal
+                    }
+                };
+
+                formatLargeNumber('totalSupply', data.token.total_supply);
+                formatLargeNumber('circSupply', data.token.circulating_supply);
+                formatLargeNumber('ethRatio', data.pricing.token_eth_ratio);
+
                 document.getElementById('treasuryPct').textContent =
                     data.token.treasury_percentage + '%';
-                document.getElementById('ethRatio').textContent =
-                    Math.floor(parseFloat(data.pricing.token_eth_ratio)).toLocaleString();
                 document.getElementById('poolCount').textContent =
                     data.tvl.pools_count;
                 document.getElementById('ethUsdPrice').textContent =
