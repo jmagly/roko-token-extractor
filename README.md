@@ -21,7 +21,7 @@ A comprehensive tool for extracting real-time data for the $ROKO token on Ethere
 
 2. **Configure environment:**
    ```bash
-   cp .env.example .env
+   cp env.example .env
    # Edit .env with your API keys
    ```
 
