@@ -286,11 +286,27 @@ fetch('<span id="apiUrl"></span>')
 
                 const data = await response.json();
 
+                // Helper function to apply smaller font for numbers with many decimal places
+                const formatWithFontSize = (elementId, value, prefix = '', suffix = '') => {
+                    const element = document.getElementById(elementId);
+                    element.textContent = prefix + value + suffix;
+
+                    // Check if value has more than 9 decimal digits
+                    const decimalPart = value.toString().split('.')[1];
+                    if (decimalPart && decimalPart.length > 9) {
+                        element.style.fontSize = '1.44em'; // 20% smaller
+                    } else {
+                        element.style.fontSize = '1.8em'; // Reset to normal
+                    }
+                };
+
                 // Update primary stats
-                document.getElementById('price').textContent =
-                    '$' + parseFloat(data.pricing.usd_per_token).toFixed(8);
-                document.getElementById('ethPrice').textContent =
-                    parseFloat(data.pricing.eth_per_token).toFixed(12) + ' ETH';
+                const priceValue = parseFloat(data.pricing.usd_per_token).toFixed(8);
+                formatWithFontSize('price', priceValue, '$');
+
+                const ethPriceValue = parseFloat(data.pricing.eth_per_token).toFixed(12);
+                formatWithFontSize('ethPrice', ethPriceValue, '', ' ETH');
+
                 document.getElementById('marketcap').textContent =
                     '$' + data.pricing.market_cap_usd;
                 document.getElementById('tvl').textContent =
