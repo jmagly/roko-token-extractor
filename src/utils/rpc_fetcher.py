@@ -15,13 +15,23 @@ from typing import List, Dict, Any, Optional
 class RPCFetcher:
     """Fetches and caches RPC endpoints from ChainList.org"""
     
-    def __init__(self, cache_file: str = "data/rpc_endpoints.json"):
+    def __init__(self, cache_file: str = "data/rpc_endpoints.json", config: Optional[Dict[str, Any]] = None):
         """Initialize the RPC fetcher."""
         self.cache_file = Path(cache_file)
         self.cache_file.parent.mkdir(parents=True, exist_ok=True)
         self.logger = logging.getLogger(__name__)
-        self.chainlist_url = "https://chainlist.org/rpcs.json"
-        self.cache_duration = 7 * 24 * 60 * 60  # 7 days in seconds
+        
+        # Load configuration
+        if config:
+            chainlist_config = config.get('ethereum', {}).get('chainlist', {})
+            self.chainlist_url = chainlist_config.get('url', 'https://chainlist.org/rpcs.json')
+            cache_duration_hours = chainlist_config.get('cache_duration_hours', 168)  # 7 days
+            self.cache_duration = cache_duration_hours * 60 * 60  # Convert to seconds
+            self.max_providers = chainlist_config.get('max_providers', 20)
+        else:
+            self.chainlist_url = "https://chainlist.org/rpcs.json"
+            self.cache_duration = 7 * 24 * 60 * 60  # 7 days in seconds
+            self.max_providers = 20
         
     def _is_cache_valid(self) -> bool:
         """Check if the cached data is still valid."""
@@ -144,6 +154,11 @@ class RPCFetcher:
         
         # Sort by priority (higher priority first)
         ethereum_rpcs.sort(key=lambda x: x['priority'], reverse=True)
+        
+        # Limit to max_providers
+        if len(ethereum_rpcs) > self.max_providers:
+            ethereum_rpcs = ethereum_rpcs[:self.max_providers]
+            self.logger.info(f"Limited to top {self.max_providers} providers")
         
         self.logger.info(f"Extracted {len(ethereum_rpcs)} Ethereum RPC endpoints")
         return ethereum_rpcs

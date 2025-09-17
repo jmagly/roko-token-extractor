@@ -42,40 +42,31 @@ def update_rpc_config():
         # Create a temporary load balancer to clear ignore list
         temp_config = ConfigClass("config/config.yaml")
         temp_load_balancer = RPCLoadBalancer(
-            temp_config.ethereum.get('rpc_providers', []),
+            [],  # Empty providers list since we're just clearing ignore list
             temp_config.ethereum.get('load_balancing', {})
         )
         temp_load_balancer.clear_ignore_list()
         logger.info("Cleared RPC ignore list due to endpoint refresh")
         
-        # Convert RPCs to config format
-        new_rpc_providers = []
-        for i, rpc in enumerate(rpcs[:20]):  # Limit to top 20
-            provider = {
-                'name': rpc['name'],
-                'url': rpc['url'],
-                'api_key': '${' + rpc['name'].upper() + '_API_KEY}' if rpc['name'] in ['alchemy', 'drpc', 'ankr', 'blastapi'] else '',
-                'priority': i + 1,
-                'rate_limit': 100 if rpc['tracking'] == 'none' else 50,
-                'timeout': 30
-            }
-            new_rpc_providers.append(provider)
-        
-        # Update config
+        # Update config with metadata (no need to store providers anymore)
         config_data = config._config.copy()
-        config_data['ethereum']['rpc_providers'] = new_rpc_providers
         
-        # Add metadata
-        config_data['ethereum']['last_updated'] = fetcher.get_cache_info().get('fetched_at', 'unknown')
-        config_data['ethereum']['total_providers'] = len(new_rpc_providers)
+        # Add metadata to chainlist section
+        if 'chainlist' not in config_data['ethereum']:
+            config_data['ethereum']['chainlist'] = {}
+        
+        config_data['ethereum']['chainlist']['last_updated'] = fetcher.get_cache_info().get('fetched_at', 'unknown')
+        config_data['ethereum']['chainlist']['total_providers'] = len(rpcs)
+        config_data['ethereum']['chainlist']['cached_providers'] = len(rpcs)
         
         # Save updated config
         with open("config/config.yaml", 'w') as f:
             import yaml
             yaml.dump(config_data, f, default_flow_style=False, indent=2)
         
-        logger.info(f"Updated config with {len(new_rpc_providers)} RPC providers")
-        logger.info(f"Top providers: {', '.join([p['name'] for p in new_rpc_providers[:5]])}")
+        logger.info(f"Updated config with ChainList metadata")
+        logger.info(f"Total providers available: {len(rpcs)}")
+        logger.info(f"Top providers: {', '.join([rpc['name'] for rpc in rpcs[:5]])}")
         
         return True
         

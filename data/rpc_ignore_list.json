@@ -1,0 +1,11 @@
+{
+  "ignored_endpoints": [
+    {
+      "url": "https://endpoints.omniatech.io/v1/eth/mainnet/public",
+      "timestamp": 1758135127.7717085,
+      "ignored_at": "2025-09-17T14:52:07.771708"
+    }
+  ],
+  "last_updated": "2025-09-17T14:52:07.771708",
+  "total_ignored": 1
+}

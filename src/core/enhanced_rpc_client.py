@@ -31,14 +31,34 @@ class EnhancedEthereumRPCClient:
         self.logger = logging.getLogger(self.__class__.__name__)
         self.settings = Config()
         
-        if use_load_balancer and self.settings.ethereum.get('rpc_providers'):
-            # Use load balancer with multiple providers
-            self.load_balancer = RPCLoadBalancer(
-                self.settings.ethereum['rpc_providers'],
-                self.settings.ethereum.get('load_balancing', {})
-            )
-            self.web3 = None  # Will be created per request
-            self.logger.info("Initialized with RPC load balancer")
+        if use_load_balancer:
+            # Get RPC providers from ChainList
+            from utils.rpc_fetcher import RPCFetcher
+            fetcher = RPCFetcher(config=self.settings._config)
+            rpc_providers = fetcher.get_ethereum_rpcs()
+            
+            if rpc_providers:
+                # Convert to load balancer format
+                provider_configs = []
+                for i, rpc in enumerate(rpc_providers):
+                    provider_config = {
+                        'name': rpc['name'],
+                        'url': rpc['url'],
+                        'api_key': '${' + rpc['name'].upper() + '_API_KEY}' if rpc['name'] in ['alchemy', 'drpc', 'ankr', 'blastapi'] else '',
+                        'priority': i + 1,
+                        'rate_limit': 100 if rpc['tracking'] == 'none' else 50,
+                        'timeout': 30
+                    }
+                    provider_configs.append(provider_config)
+                
+                load_balancing_config = self.settings.ethereum.get('load_balancing', {})
+                self.load_balancer = RPCLoadBalancer(provider_configs, load_balancing_config)
+                self.web3 = None  # Will be created per request
+                self.logger.info(f"Initialized RPC Load Balancer with {len(provider_configs)} providers")
+                self.logger.info(f"Strategy: {load_balancing_config.get('strategy', 'round_robin')}")
+            else:
+                self.logger.warning("No RPC providers available from ChainList")
+                self.load_balancer = None
         else:
             # Use single RPC provider (legacy mode)
             if rpc_url is None:

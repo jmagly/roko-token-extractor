@@ -1,3 +1,13 @@
+alchemy:
+  api_key: ${ALCHEMY_API_KEY}
+  enabled: true
+  rate_limit: 100
+api_keys:
+  alchemy: ${ALCHEMY_API_KEY}
+  ankr: ${ANKR_API_KEY}
+  blastapi: ${BLASTAPI_API_KEY}
+  coingecko: ${COINGECKO_API_KEY}
+  drpc: ${DRPC_API_KEY}
 contracts:
   erc20_abi:
   - name: name
@@ -79,30 +89,6 @@ contracts:
       type: bool
     stateMutability: nonpayable
     type: function
-  - inputs:
-    - indexed: true
-      name: from
-      type: address
-    - indexed: true
-      name: to
-      type: address
-    - indexed: false
-      name: value
-      type: uint256
-    name: Transfer
-    type: event
-  - inputs:
-    - indexed: true
-      name: owner
-      type: address
-    - indexed: true
-      name: spender
-      type: address
-    - indexed: false
-      name: value
-      type: uint256
-    name: Approval
-    type: event
   uniswap_v2_factory_abi:
   - inputs:
     - name: tokenA
@@ -116,247 +102,97 @@ contracts:
     stateMutability: view
     type: function
   - inputs:
-    - name: index
-      type: uint256
-    name: allPairs
+    - name: token0
+      type: address
+    - name: token1
+      type: address
+    name: getPair
     outputs:
     - name: pair
       type: address
     stateMutability: view
     type: function
-  - name: allPairsLength
-    outputs:
-    - name: length
-      type: uint256
-    stateMutability: view
-    type: function
-  - inputs:
-    - indexed: true
-      name: token0
-      type: address
-    - indexed: true
-      name: token1
-      type: address
-    - indexed: false
-      name: pair
-      type: address
-    - indexed: false
-      name: index
-      type: uint256
-    name: PairCreated
-    type: event
   uniswap_v2_pair_abi:
-  - name: getReserves
+  - inputs: []
+    name: getReserves
     outputs:
-    - name: reserve0
+    - name: _reserve0
       type: uint112
-    - name: reserve1
+    - name: _reserve1
       type: uint112
-    - name: blockTimestampLast
+    - name: _blockTimestampLast
       type: uint32
     stateMutability: view
     type: function
-  - name: token0
+  - inputs: []
+    name: token0
     outputs:
     - name: ''
       type: address
     stateMutability: view
     type: function
-  - name: token1
+  - inputs: []
+    name: token1
     outputs:
     - name: ''
       type: address
     stateMutability: view
     type: function
-  - name: totalSupply
+  - inputs: []
+    name: totalSupply
     outputs:
     - name: ''
       type: uint256
     stateMutability: view
     type: function
-  - name: kLast
-    outputs:
-    - name: ''
-      type: uint256
-    stateMutability: view
-    type: function
-  - inputs:
-    - indexed: true
-      name: sender
-      type: address
-    - indexed: false
-      name: amount0In
-      type: uint256
-    - indexed: false
-      name: amount1In
-      type: uint256
-    - indexed: false
-      name: amount0Out
-      type: uint256
-    - indexed: false
-      name: amount1Out
-      type: uint256
-    - indexed: true
-      name: to
-      type: address
-    name: Swap
-    type: event
-  - inputs:
-    - indexed: false
-      name: reserve0
-      type: uint112
-    - indexed: false
-      name: reserve1
-      type: uint112
-    name: Sync
-    type: event
 ethereum:
-  api_key: ''
   chain_id: 1
+  chainlist:
+    cache_duration_hours: 168
+    cached_providers: 20
+    last_updated: '2025-09-17T14:33:32.760434'
+    max_providers: 20
+    refresh_on_startup: true
+    total_providers: 20
+    url: https://chainlist.org/rpcs.json
   gas_limit: 100000
-  last_updated: '2025-09-17T14:33:32.760434'
+  ignore_list:
+    auto_clear_on_refresh: true
+    duration_hours: 24
   load_balancing:
     health_check_interval: 60
     max_concurrent_requests: 5
     retry_attempts: 3
     retry_delay: 1
     strategy: round_robin
-  rpc_providers:
-  - api_key: ''
-    name: llamarpc
-    priority: 1
-    rate_limit: 100
-    timeout: 30
-    url: https://eth.llamarpc.com
-  - api_key: ''
-    name: publicnode
-    priority: 2
-    rate_limit: 100
-    timeout: 30
-    url: https://ethereum-rpc.publicnode.com
-  - api_key: ''
-    name: 1rpc
-    priority: 3
-    rate_limit: 100
-    timeout: 30
-    url: https://1rpc.io/eth
-  - api_key: ''
-    name: getblock
-    priority: 4
-    rate_limit: 100
-    timeout: 30
-    url: https://go.getblock.io/aefd01aa907c4805ba3c00a9e5b48c6b
-  - api_key: ''
-    name: builder0x69
-    priority: 5
-    rate_limit: 100
-    timeout: 30
-    url: https://rpc.builder0x69.io
-  - api_key: ''
-    name: mevblocker
-    priority: 6
-    rate_limit: 100
-    timeout: 30
-    url: https://rpc.mevblocker.io
-  - api_key: ''
-    name: flashbots
-    priority: 7
-    rate_limit: 100
-    timeout: 30
-    url: https://rpc.flashbots.net
-  - api_key: ''
-    name: payload
-    priority: 8
-    rate_limit: 100
-    timeout: 30
-    url: https://rpc.payload.de
-  - api_key: ''
-    name: zmok
-    priority: 9
-    rate_limit: 100
-    timeout: 30
-    url: https://api.zmok.io/mainnet/oaen6dy8ff6hju9k
-  - api_key: ''
-    name: meowrpc
-    priority: 10
-    rate_limit: 100
-    timeout: 30
-    url: https://eth.meowrpc.com
-  - api_key: ${DRPC_API_KEY}
-    name: drpc
-    priority: 11
-    rate_limit: 100
-    timeout: 30
-    url: https://eth.drpc.org
-  - api_key: ''
-    name: merkle
-    priority: 12
-    rate_limit: 100
-    timeout: 30
-    url: https://eth.merkle.io
-  - api_key: ''
-    name: lokibuilder
-    priority: 13
-    rate_limit: 100
-    timeout: 30
-    url: https://rpc.lokibuilder.xyz/wallet
-  - api_key: ''
-    name: stateless
-    priority: 14
-    rate_limit: 100
-    timeout: 30
-    url: https://api.stateless.solutions/ethereum/v1/demo
-  - api_key: ''
-    name: polysplit
-    priority: 15
-    rate_limit: 100
-    timeout: 30
-    url: https://rpc.polysplit.cloud/v1/chain/1
-  - api_key: ''
-    name: nodifi
-    priority: 16
-    rate_limit: 100
-    timeout: 30
-    url: https://rpc.nodifi.ai/api/rpc/free
-  - api_key: ''
-    name: radiumblock
-    priority: 17
-    rate_limit: 100
-    timeout: 30
-    url: https://rpc.public.curie.radiumblock.co/http/ethereum
-  - api_key: ''
-    name: radiumblock
-    priority: 18
-    rate_limit: 100
-    timeout: 30
-    url: https://rpc.public.curie.radiumblock.co/ws/ethereum
-  - api_key: ''
-    name: blockrazor
-    priority: 19
-    rate_limit: 100
-    timeout: 30
-    url: https://eth.blockrazor.xyz
-  - api_key: ''
-    name: omniatech
-    priority: 20
-    rate_limit: 100
-    timeout: 30
-    url: https://endpoints.omniatech.io/v1/eth/mainnet/public
-  rpc_url: https://eth.llamarpc.com
-  total_providers: 20
 monitoring:
   export_format:
   - json
   - csv
   historical_data_days: 30
   log_level: INFO
-  update_interval: 30
+  price_update_interval: 3600
 pools:
-  uniswap_v2_factory: '0x5C69bEe701ef814a2B6a3EDD4B1652CB9cc5aA6f'
-  uniswap_v3_factory: '0x1F98431c8aD98523631AE4a59f267346ea31F984'
-  usdc_address: '0xA0b86a33E6441b8C4C8C0C4C8C0C4C8C0C4C8C0C4'
-  weth_address: '0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2'
+  uniswap_v2_factory: 0x5C69bEe701ef814a2B6a3EDD4B1652CB9cc5aA6f
+  uniswap_v3_factory: 0x1F98431c8aD98523631AE4a59f267346ea31F984
+  weth_address: 0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2
+price_sources:
+  coingecko:
+    api_key: ${COINGECKO_API_KEY}
+    enabled: true
+    rate_limit: 50
+  dexscreener:
+    enabled: true
+    rate_limit: 30
+  oneinch:
+    enabled: true
+    rate_limit: 20
+  uniswap:
+    enabled: true
+    rate_limit: 100
 roko_token:
-  address: '0x6f222e04f6c53cc688ffb0abe7206aac66a8ff98'
+  address: 634460209752492759150162917838696066195990839192
+  decimals: 18
   name: ROKO
   symbol: ROKO
+  uniswap_pair: 1278979549828856515201214564315408281080422456062
