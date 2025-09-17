@@ -1,312 +1,362 @@
-ethereum:
-  # Primary RPC providers (will be used in order with failover)
-  rpc_providers:
-    - name: "eth.llamarpc"
-      url: "https://eth.llamarpc.com"
-      api_key: ""
-      priority: 1
-      rate_limit: 100  # requests per minute
-      timeout: 30
-    - name: "blxr-virginia"
-      url: "https://virginia.rpc.blxrbdn.com"
-      api_key: ""
-      priority: 2
-      rate_limit: 200
-      timeout: 30
-    - name: "blxr-eth"
-      url: "https://eth.rpc.blxrbdn.com"
-      api_key: ""
-      priority: 3
-      rate_limit: 200
-      timeout: 30
-    - name: "drpc"
-      url: "https://eth.drpc.org"
-      api_key: "${DRPC_API_KEY}"
-      priority: 4
-      rate_limit: 150
-      timeout: 30
-    - name: "poolz"
-      url: "https://rpc.poolz.finance/eth"
-      api_key: ""
-      priority: 5
-      rate_limit: 100
-      timeout: 30
-    - name: "blastapi"
-      url: "https://eth-mainnet.public.blastapi.io"
-      api_key: "${BLASTAPI_API_KEY}"
-      priority: 6
-      rate_limit: 100
-      timeout: 30
-    - name: "blockrazor"
-      url: "https://eth.blockrazor.xyz"
-      api_key: "${BLOCKRAZOR_API_KEY}"
-      priority: 7
-      rate_limit: 100
-      timeout: 30
-    - name: "alchemy"
-      url: "https://eth-mainnet.g.alchemy.com/v2/{API_KEY}"
-      api_key: "${ALCHEMY_API_KEY}"
-      priority: 8
-      rate_limit: 1000
-      timeout: 30
-    - name: "infura"
-      url: "https://mainnet.infura.io/v3/{API_KEY}"
-      api_key: "${INFURA_API_KEY}"
-      priority: 9
-      rate_limit: 1000
-      timeout: 30
-    - name: "public"
-      url: "https://ethereum.publicnode.com"
-      api_key: ""
-      priority: 10
-      rate_limit: 50
-      timeout: 30
-  
-  # Legacy single RPC (for backward compatibility)
-  rpc_url: "https://eth.llamarpc.com"
-  api_key: ""
-  
-  # Chain configuration
-  chain_id: 1
-  gas_limit: 100000
-  
-  # Load balancing settings
-  load_balancing:
-    strategy: "round_robin"  # round_robin, priority, random
-    retry_attempts: 3
-    retry_delay: 1  # seconds
-    health_check_interval: 60  # seconds
-    max_concurrent_requests: 5
-
-roko_token:
-  address: "0x6f222e04f6c53cc688ffb0abe7206aac66a8ff98"
-  name: "ROKO"
-  symbol: "ROKO"
-
-monitoring:
-  update_interval: 30  # seconds
-  historical_data_days: 30
-  export_format: ["json", "csv"]
-  log_level: "INFO"
-
-pools:
-  uniswap_v2_factory: "0x5C69bEe701ef814a2B6a3EDD4B1652CB9cc5aA6f"
-  uniswap_v3_factory: "0x1F98431c8aD98523631AE4a59f267346ea31F984"
-  weth_address: "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2"
-  usdc_address: "0xA0b86a33E6441b8C4C8C0C4C8C0C4C8C0C4C8C0C4"
-
 contracts:
   erc20_abi:
-    - type: "function"
-      name: "name"
-      stateMutability: "view"
-      outputs:
-        - type: "string"
-          name: ""
-    - type: "function"
-      name: "symbol"
-      stateMutability: "view"
-      outputs:
-        - type: "string"
-          name: ""
-    - type: "function"
-      name: "decimals"
-      stateMutability: "view"
-      outputs:
-        - type: "uint8"
-          name: ""
-    - type: "function"
-      name: "totalSupply"
-      stateMutability: "view"
-      outputs:
-        - type: "uint256"
-          name: ""
-    - type: "function"
-      name: "balanceOf"
-      stateMutability: "view"
-      inputs:
-        - type: "address"
-          name: "account"
-      outputs:
-        - type: "uint256"
-          name: ""
-    - type: "function"
-      name: "transfer"
-      stateMutability: "nonpayable"
-      inputs:
-        - type: "address"
-          name: "to"
-        - type: "uint256"
-          name: "amount"
-      outputs:
-        - type: "bool"
-          name: ""
-    - type: "function"
-      name: "allowance"
-      stateMutability: "view"
-      inputs:
-        - type: "address"
-          name: "owner"
-        - type: "address"
-          name: "spender"
-      outputs:
-        - type: "uint256"
-          name: ""
-    - type: "function"
-      name: "approve"
-      stateMutability: "nonpayable"
-      inputs:
-        - type: "address"
-          name: "spender"
-        - type: "uint256"
-          name: "amount"
-      outputs:
-        - type: "bool"
-          name: ""
-    - type: "function"
-      name: "transferFrom"
-      stateMutability: "nonpayable"
-      inputs:
-        - type: "address"
-          name: "from"
-        - type: "address"
-          name: "to"
-        - type: "uint256"
-          name: "amount"
-      outputs:
-        - type: "bool"
-          name: ""
-    - type: "event"
-      name: "Transfer"
-      inputs:
-        - type: "address"
-          name: "from"
-          indexed: true
-        - type: "address"
-          name: "to"
-          indexed: true
-        - type: "uint256"
-          name: "value"
-          indexed: false
-    - type: "event"
-      name: "Approval"
-      inputs:
-        - type: "address"
-          name: "owner"
-          indexed: true
-        - type: "address"
-          name: "spender"
-          indexed: true
-        - type: "uint256"
-          name: "value"
-          indexed: false
-
-  uniswap_v2_pair_abi:
-    - type: "function"
-      name: "getReserves"
-      stateMutability: "view"
-      outputs:
-        - type: "uint112"
-          name: "reserve0"
-        - type: "uint112"
-          name: "reserve1"
-        - type: "uint32"
-          name: "blockTimestampLast"
-    - type: "function"
-      name: "token0"
-      stateMutability: "view"
-      outputs:
-        - type: "address"
-          name: ""
-    - type: "function"
-      name: "token1"
-      stateMutability: "view"
-      outputs:
-        - type: "address"
-          name: ""
-    - type: "function"
-      name: "totalSupply"
-      stateMutability: "view"
-      outputs:
-        - type: "uint256"
-          name: ""
-    - type: "function"
-      name: "kLast"
-      stateMutability: "view"
-      outputs:
-        - type: "uint256"
-          name: ""
-    - type: "event"
-      name: "Swap"
-      inputs:
-        - type: "address"
-          name: "sender"
-          indexed: true
-        - type: "uint256"
-          name: "amount0In"
-          indexed: false
-        - type: "uint256"
-          name: "amount1In"
-          indexed: false
-        - type: "uint256"
-          name: "amount0Out"
-          indexed: false
-        - type: "uint256"
-          name: "amount1Out"
-          indexed: false
-        - type: "address"
-          name: "to"
-          indexed: true
-    - type: "event"
-      name: "Sync"
-      inputs:
-        - type: "uint112"
-          name: "reserve0"
-          indexed: false
-        - type: "uint112"
-          name: "reserve1"
-          indexed: false
-
+  - name: name
+    outputs:
+    - name: ''
+      type: string
+    stateMutability: view
+    type: function
+  - name: symbol
+    outputs:
+    - name: ''
+      type: string
+    stateMutability: view
+    type: function
+  - name: decimals
+    outputs:
+    - name: ''
+      type: uint8
+    stateMutability: view
+    type: function
+  - name: totalSupply
+    outputs:
+    - name: ''
+      type: uint256
+    stateMutability: view
+    type: function
+  - inputs:
+    - name: account
+      type: address
+    name: balanceOf
+    outputs:
+    - name: ''
+      type: uint256
+    stateMutability: view
+    type: function
+  - inputs:
+    - name: to
+      type: address
+    - name: amount
+      type: uint256
+    name: transfer
+    outputs:
+    - name: ''
+      type: bool
+    stateMutability: nonpayable
+    type: function
+  - inputs:
+    - name: owner
+      type: address
+    - name: spender
+      type: address
+    name: allowance
+    outputs:
+    - name: ''
+      type: uint256
+    stateMutability: view
+    type: function
+  - inputs:
+    - name: spender
+      type: address
+    - name: amount
+      type: uint256
+    name: approve
+    outputs:
+    - name: ''
+      type: bool
+    stateMutability: nonpayable
+    type: function
+  - inputs:
+    - name: from
+      type: address
+    - name: to
+      type: address
+    - name: amount
+      type: uint256
+    name: transferFrom
+    outputs:
+    - name: ''
+      type: bool
+    stateMutability: nonpayable
+    type: function
+  - inputs:
+    - indexed: true
+      name: from
+      type: address
+    - indexed: true
+      name: to
+      type: address
+    - indexed: false
+      name: value
+      type: uint256
+    name: Transfer
+    type: event
+  - inputs:
+    - indexed: true
+      name: owner
+      type: address
+    - indexed: true
+      name: spender
+      type: address
+    - indexed: false
+      name: value
+      type: uint256
+    name: Approval
+    type: event
   uniswap_v2_factory_abi:
-    - type: "function"
-      name: "getPair"
-      stateMutability: "view"
-      inputs:
-        - type: "address"
-          name: "tokenA"
-        - type: "address"
-          name: "tokenB"
-      outputs:
-        - type: "address"
-          name: "pair"
-    - type: "function"
-      name: "allPairs"
-      stateMutability: "view"
-      inputs:
-        - type: "uint256"
-          name: "index"
-      outputs:
-        - type: "address"
-          name: "pair"
-    - type: "function"
-      name: "allPairsLength"
-      stateMutability: "view"
-      outputs:
-        - type: "uint256"
-          name: "length"
-    - type: "event"
-      name: "PairCreated"
-      inputs:
-        - type: "address"
-          name: "token0"
-          indexed: true
-        - type: "address"
-          name: "token1"
-          indexed: true
-        - type: "address"
-          name: "pair"
-          indexed: false
-        - type: "uint256"
-          name: "index"
-          indexed: false
-
+  - inputs:
+    - name: tokenA
+      type: address
+    - name: tokenB
+      type: address
+    name: getPair
+    outputs:
+    - name: pair
+      type: address
+    stateMutability: view
+    type: function
+  - inputs:
+    - name: index
+      type: uint256
+    name: allPairs
+    outputs:
+    - name: pair
+      type: address
+    stateMutability: view
+    type: function
+  - name: allPairsLength
+    outputs:
+    - name: length
+      type: uint256
+    stateMutability: view
+    type: function
+  - inputs:
+    - indexed: true
+      name: token0
+      type: address
+    - indexed: true
+      name: token1
+      type: address
+    - indexed: false
+      name: pair
+      type: address
+    - indexed: false
+      name: index
+      type: uint256
+    name: PairCreated
+    type: event
+  uniswap_v2_pair_abi:
+  - name: getReserves
+    outputs:
+    - name: reserve0
+      type: uint112
+    - name: reserve1
+      type: uint112
+    - name: blockTimestampLast
+      type: uint32
+    stateMutability: view
+    type: function
+  - name: token0
+    outputs:
+    - name: ''
+      type: address
+    stateMutability: view
+    type: function
+  - name: token1
+    outputs:
+    - name: ''
+      type: address
+    stateMutability: view
+    type: function
+  - name: totalSupply
+    outputs:
+    - name: ''
+      type: uint256
+    stateMutability: view
+    type: function
+  - name: kLast
+    outputs:
+    - name: ''
+      type: uint256
+    stateMutability: view
+    type: function
+  - inputs:
+    - indexed: true
+      name: sender
+      type: address
+    - indexed: false
+      name: amount0In
+      type: uint256
+    - indexed: false
+      name: amount1In
+      type: uint256
+    - indexed: false
+      name: amount0Out
+      type: uint256
+    - indexed: false
+      name: amount1Out
+      type: uint256
+    - indexed: true
+      name: to
+      type: address
+    name: Swap
+    type: event
+  - inputs:
+    - indexed: false
+      name: reserve0
+      type: uint112
+    - indexed: false
+      name: reserve1
+      type: uint112
+    name: Sync
+    type: event
+ethereum:
+  api_key: ''
+  chain_id: 1
+  gas_limit: 100000
+  last_updated: '2025-09-17T14:33:32.760434'
+  load_balancing:
+    health_check_interval: 60
+    max_concurrent_requests: 5
+    retry_attempts: 3
+    retry_delay: 1
+    strategy: round_robin
+  rpc_providers:
+  - api_key: ''
+    name: llamarpc
+    priority: 1
+    rate_limit: 100
+    timeout: 30
+    url: https://eth.llamarpc.com
+  - api_key: ''
+    name: publicnode
+    priority: 2
+    rate_limit: 100
+    timeout: 30
+    url: https://ethereum-rpc.publicnode.com
+  - api_key: ''
+    name: 1rpc
+    priority: 3
+    rate_limit: 100
+    timeout: 30
+    url: https://1rpc.io/eth
+  - api_key: ''
+    name: getblock
+    priority: 4
+    rate_limit: 100
+    timeout: 30
+    url: https://go.getblock.io/aefd01aa907c4805ba3c00a9e5b48c6b
+  - api_key: ''
+    name: builder0x69
+    priority: 5
+    rate_limit: 100
+    timeout: 30
+    url: https://rpc.builder0x69.io
+  - api_key: ''
+    name: mevblocker
+    priority: 6
+    rate_limit: 100
+    timeout: 30
+    url: https://rpc.mevblocker.io
+  - api_key: ''
+    name: flashbots
+    priority: 7
+    rate_limit: 100
+    timeout: 30
+    url: https://rpc.flashbots.net
+  - api_key: ''
+    name: payload
+    priority: 8
+    rate_limit: 100
+    timeout: 30
+    url: https://rpc.payload.de
+  - api_key: ''
+    name: zmok
+    priority: 9
+    rate_limit: 100
+    timeout: 30
+    url: https://api.zmok.io/mainnet/oaen6dy8ff6hju9k
+  - api_key: ''
+    name: meowrpc
+    priority: 10
+    rate_limit: 100
+    timeout: 30
+    url: https://eth.meowrpc.com
+  - api_key: ${DRPC_API_KEY}
+    name: drpc
+    priority: 11
+    rate_limit: 100
+    timeout: 30
+    url: https://eth.drpc.org
+  - api_key: ''
+    name: merkle
+    priority: 12
+    rate_limit: 100
+    timeout: 30
+    url: https://eth.merkle.io
+  - api_key: ''
+    name: lokibuilder
+    priority: 13
+    rate_limit: 100
+    timeout: 30
+    url: https://rpc.lokibuilder.xyz/wallet
+  - api_key: ''
+    name: stateless
+    priority: 14
+    rate_limit: 100
+    timeout: 30
+    url: https://api.stateless.solutions/ethereum/v1/demo
+  - api_key: ''
+    name: polysplit
+    priority: 15
+    rate_limit: 100
+    timeout: 30
+    url: https://rpc.polysplit.cloud/v1/chain/1
+  - api_key: ''
+    name: nodifi
+    priority: 16
+    rate_limit: 100
+    timeout: 30
+    url: https://rpc.nodifi.ai/api/rpc/free
+  - api_key: ''
+    name: radiumblock
+    priority: 17
+    rate_limit: 100
+    timeout: 30
+    url: https://rpc.public.curie.radiumblock.co/http/ethereum
+  - api_key: ''
+    name: radiumblock
+    priority: 18
+    rate_limit: 100
+    timeout: 30
+    url: https://rpc.public.curie.radiumblock.co/ws/ethereum
+  - api_key: ''
+    name: blockrazor
+    priority: 19
+    rate_limit: 100
+    timeout: 30
+    url: https://eth.blockrazor.xyz
+  - api_key: ''
+    name: omniatech
+    priority: 20
+    rate_limit: 100
+    timeout: 30
+    url: https://endpoints.omniatech.io/v1/eth/mainnet/public
+  rpc_url: https://eth.llamarpc.com
+  total_providers: 20
+monitoring:
+  export_format:
+  - json
+  - csv
+  historical_data_days: 30
+  log_level: INFO
+  update_interval: 30
+pools:
+  uniswap_v2_factory: '0x5C69bEe701ef814a2B6a3EDD4B1652CB9cc5aA6f'
+  uniswap_v3_factory: '0x1F98431c8aD98523631AE4a59f267346ea31F984'
+  usdc_address: '0xA0b86a33E6441b8C4C8C0C4C8C0C4C8C0C4C8C0C4'
+  weth_address: '0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2'
+roko_token:
+  address: '0x6f222e04f6c53cc688ffb0abe7206aac66a8ff98'
+  name: ROKO
+  symbol: ROKO
