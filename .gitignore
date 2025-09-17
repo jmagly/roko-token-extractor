@@ -56,13 +56,16 @@ Thumbs.db
 logs/
 *.log
 
-# Data exports (keep structure but ignore actual data)
-data/exports/*.json
-data/exports/*.csv
-web_delivery/*.json
+# Generated data directories (exclude all generated files)
+data/
+web_delivery/
+logs/
 
-# Keep directory structure
+# Keep directory structure for data
+!data/.gitkeep
 !data/exports/.gitkeep
+!data/backups/.gitkeep
+!data/historical/.gitkeep
 !web_delivery/.gitkeep
 
 # Database
