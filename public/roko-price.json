@@ -1,0 +1,60 @@
+{
+  "timestamp": 1758151887,
+  "datetime": "2025-09-18T01:31:27.289780",
+  "last_updated": "2025-09-18 01:31:27 UTC",
+  "token": {
+    "name": "ROKO",
+    "symbol": "ROKO",
+    "address": "0x6f222e04f6c53cc688ffb0abe7206aac66a8ff98",
+    "decimals": 18,
+    "total_supply": "369369369369",
+    "circulating_supply": "208028320498.42779541015625",
+    "treasury_holdings": "161341048870.57220458984375",
+    "treasury_percentage": "43.68"
+  },
+  "pricing": {
+    "token_eth_ratio": "303954595.427969872951507568",
+    "eth_per_token": "0.000000003289965064",
+    "usd_per_token": "0.000015139749448668",
+    "eth_price_usd": "4601.8",
+    "market_cap_usd": "3149496.65",
+    "total_market_cap_usd": "5592159.71",
+    "price_source": "chain_data"
+  },
+  "tvl": {
+    "total_tvl_usd": "444827.73",
+    "pools_count": 1,
+    "pools": [
+      {
+        "address": "0xE0076d311a4628516d157aD684DBd2dDaDa3DaFE",
+        "token0": "0x6f222E04F6c53Cc688FfB0Abe7206aAc66A8FF98",
+        "token1": "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2",
+        "roko_is_token0": true,
+        "reserves": {
+          "reserve0": 14691779510.629433,
+          "reserve1": 48.33544131794856
+        },
+        "tvl_usd": 444827.72941000276,
+        "volume_24h_usd": 22243.355301973224,
+        "volume_7d_usd": 155703.48711381256,
+        "volume_30d_usd": 667300.6590591967,
+        "volume_24h_eth": 4.833544131794856,
+        "volume_7d_eth": 33.834808922563994,
+        "volume_30d_eth": 145.00632395384568
+      }
+    ]
+  },
+  "volume": {
+    "volume_24h_usd": "22243.36",
+    "volume_7d_usd": "155703.49",
+    "volume_30d_usd": "667300.66",
+    "volume_24h_eth": "4.833544131794855758",
+    "volume_7d_eth": "33.83480892256399386",
+    "volume_30d_eth": "145.006323953845679853"
+  },
+  "summary": {
+    "status": "success",
+    "extraction_time": "2025-09-18T01:31:27.289867",
+    "data_quality": "high"
+  }
+}

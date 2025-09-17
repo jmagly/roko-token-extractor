@@ -53,6 +53,35 @@ A production-ready tool for extracting real-time data for any ERC20 token on Eth
 
 ## Production Deployment
 
+### Full Production System
+
+This repository includes a complete production deployment system with web server, dashboard, and automated data extraction:
+
+**🚀 Quick Production Setup:**
+```bash
+# Install the web service
+sudo ./install_service.sh
+
+# Set up data extraction (every 15 minutes)
+crontab -e
+# Add: */15 * * * * /home/roctinam/roko-token-extractor/run_scheduled_extraction.sh >> /home/roctinam/roko-token-extractor/logs/cron.log 2>&1
+
+# Access the dashboard
+curl http://localhost:8187/price
+```
+
+**📖 Complete Documentation:** See [`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md) for comprehensive deployment instructions.
+
+### Production Features
+
+- **🌐 Web Server**: Python HTTP server with ETag caching on port 8187
+- **📊 Dashboard**: Real-time web interface at `/`
+- **🔌 API Endpoint**: Clean `/price` endpoint via symlink
+- **⏰ Automated Updates**: 15-minute cron schedule for data extraction
+- **🛠️ Systemd Service**: Auto-start, monitoring, and restart capabilities
+- **📈 Caching**: Intelligent ETag-based caching for performance
+- **🔍 Monitoring**: Comprehensive logging and health checks
+
 ### Command Line Parameters
 
 The tool supports custom output paths for production deployment:

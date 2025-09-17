@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ROKO Token Data API</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: white;
+            margin: 0;
+            padding: 20px;
+            color: black;
+            min-height: 100vh;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            border: 4px solid black;
+            border-radius: 20px;
+            overflow: hidden;
+        }
+        .header {
+            background: black;
+            color: white;
+            padding: 30px;
+            text-align: center;
+            border-bottom: 4px solid black;
+        }
+        h1 {
+            margin: 0;
+            font-size: 2.5em;
+            font-weight: bold;
+        }
+        h2, h3 {
+            color: black;
+            font-weight: bold;
+            margin-top: 30px;
+            margin-bottom: 20px;
+        }
+        .subtitle {
+            margin-top: 10px;
+            opacity: 0.9;
+        }
+        .content {
+            padding: 30px;
+            background: white;
+        }
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin: 30px 0;
+        }
+        .stat {
+            background: white;
+            padding: 20px;
+            border: 4px solid black;
+            border-radius: 15px;
+            text-align: center;
+        }
+        .stat-value {
+            font-size: 1.8em;
+            font-weight: bold;
+            color: black;
+        }
+        .stat-label {
+            color: black;
+            margin-top: 5px;
+            font-size: 0.9em;
+            opacity: 0.7;
+        }
+        .api-endpoint {
+            background: white;
+            padding: 15px;
+            border: 4px solid black;
+            border-radius: 10px;
+            margin: 20px 0;
+            font-family: 'Courier New', monospace;
+            word-break: break-all;
+            color: black;
+        }
+        .status {
+            display: inline-block;
+            padding: 5px 10px;
+            border: 2px solid black;
+            border-radius: 10px;
+            background: white;
+            color: black;
+            font-size: 0.9em;
+            margin-left: 10px;
+            font-weight: bold;
+        }
+        .error {
+            background: black;
+            color: white;
+        }
+        .loading {
+            background: white;
+            color: black;
+            border-style: dashed;
+        }
+        .cache-info {
+            margin-top: 20px;
+            padding: 15px;
+            background: white;
+            border: 4px solid black;
+            border-radius: 10px;
+            font-size: 0.9em;
+            color: black;
+        }
+        .refresh-btn {
+            background: black;
+            color: white;
+            border: 4px solid black;
+            padding: 10px 20px;
+            border-radius: 10px;
+            cursor: pointer;
+            margin-top: 10px;
+            font-weight: bold;
+        }
+        .refresh-btn:hover {
+            background: white;
+            color: black;
+        }
+        .last-updated {
+            color: black;
+            font-size: 0.9em;
+            margin-top: 10px;
+            opacity: 0.7;
+        }
+        pre {
+            background: white !important;
+            border: 4px solid black !important;
+            border-radius: 10px !important;
+            padding: 15px !important;
+            color: black !important;
+        }
+        textarea {
+            background: white !important;
+            color: black !important;
+            border: 4px solid black !important;
+            border-radius: 10px !important;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🪙 ROKO Token Data</h1>
+            <div class="subtitle">Real-time blockchain data API</div>
+        </div>
+        <div class="content">
+            <h2>Live Data <span class="status loading" id="status">Loading...</span></h2>
+            <div class="stats" id="stats">
+                <div class="stat">
+                    <div class="stat-value" id="price">-</div>
+                    <div class="stat-label">Price (USD)</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-value" id="ethPrice">-</div>
+                    <div class="stat-label">Price (ETH)</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-value" id="marketcap">-</div>
+                    <div class="stat-label">Market Cap</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-value" id="tvl">-</div>
+                    <div class="stat-label">Total Value Locked</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-value" id="volume">-</div>
+                    <div class="stat-label">24h Volume</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-value" id="volume7d">-</div>
+                    <div class="stat-label">7d Volume</div>
+                </div>
+            </div>
+
+            <h3>Additional Token Metrics</h3>
+            <div class="stats" id="additionalStats">
+                <div class="stat">
+                    <div class="stat-value" id="totalSupply">-</div>
+                    <div class="stat-label">Total Supply</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-value" id="circSupply">-</div>
+                    <div class="stat-label">Circulating Supply</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-value" id="treasuryPct">-</div>
+                    <div class="stat-label">Treasury Holdings</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-value" id="ethRatio">-</div>
+                    <div class="stat-label">ROKO per ETH</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-value" id="poolCount">-</div>
+                    <div class="stat-label">Active Pools</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-value" id="ethUsdPrice">-</div>
+                    <div class="stat-label">ETH Price</div>
+                </div>
+            </div>
+
+            <div class="last-updated" id="lastUpdated"></div>
+
+            <h3>API Endpoint</h3>
+            <div class="api-endpoint" id="endpoint"></div>
+
+            <div class="cache-info">
+                <strong>🚀 Caching Information:</strong><br>
+                • Data updates every 15 minutes automatically<br>
+                • ETags are used for efficient caching (based on data timestamp)<br>
+                • Browser cache: 15 minutes (must-revalidate)<br>
+                • CDN-friendly with proper cache headers<br>
+                <span id="cacheStatus"></span>
+            </div>
+
+            <h3>Raw JSON Data</h3>
+            <textarea id="jsonData" readonly style="width: 100%; height: 400px; font-family: 'Courier New', monospace; background: white; color: black; padding: 15px; border-radius: 10px; border: 4px solid black; resize: vertical; white-space: pre; overflow: auto;">Loading...</textarea>
+
+            <button class="refresh-btn" style="margin-top: 10px;" onclick="copyToClipboard()">Copy JSON</button>
+            <span id="copyStatus" style="margin-left: 10px; color: black; font-weight: bold; display: none;">✓ Copied!</span>
+
+            <h3>Integration Example</h3>
+            <pre style="background: #f5f5f5; padding: 15px; border-radius: 5px; overflow-x: auto;">
+fetch('<span id="apiUrl"></span>')
+  .then(response => response.json())
+  .then(data => {
+    console.log('Token Price:', data.pricing.usd_per_token);
+    console.log('Market Cap:', data.pricing.market_cap_usd);
+    console.log('TVL:', data.tvl.total_tvl_usd);
+  });
+            </pre>
+        </div>
+    </div>
+
+    <script>
+        const baseUrl = window.location.origin;
+        const endpoint = `${baseUrl}/price`;
+
+        document.getElementById('endpoint').textContent = endpoint;
+        document.getElementById('apiUrl').textContent = endpoint;
+
+        let lastEtag = null;
+
+        async function fetchData() {
+            const status = document.getElementById('status');
+            status.textContent = 'Loading...';
+            status.className = 'status loading';
+
+            try {
+                const headers = {};
+                if (lastEtag) {
+                    headers['If-None-Match'] = lastEtag;
+                }
+
+                const response = await fetch(endpoint, {
+                    headers,
+                    cache: 'default'
+                });
+
+                if (response.status === 304) {
+                    // Not Modified - using cached data
+                    document.getElementById('cacheStatus').innerHTML =
+                        '<br><strong>✅ Cache Status:</strong> Using cached data (304 Not Modified)';
+                    status.textContent = 'Live (Cached)';
+                    status.className = 'status';
+                    return;
+                }
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const newEtag = response.headers.get('ETag');
+                if (newEtag) {
+                    lastEtag = newEtag;
+                }
+
+                const data = await response.json();
+
+                // Update primary stats
+                document.getElementById('price').textContent =
+                    '$' + parseFloat(data.pricing.usd_per_token).toFixed(8);
+                document.getElementById('ethPrice').textContent =
+                    parseFloat(data.pricing.eth_per_token).toFixed(12) + ' ETH';
+                document.getElementById('marketcap').textContent =
+                    '$' + data.pricing.market_cap_usd;
+                document.getElementById('tvl').textContent =
+                    '$' + data.tvl.total_tvl_usd;
+                document.getElementById('volume').textContent =
+                    '$' + data.volume.volume_24h_usd;
+                document.getElementById('volume7d').textContent =
+                    '$' + data.volume.volume_7d_usd;
+
+                // Update additional stats
+                document.getElementById('totalSupply').textContent =
+                    parseFloat(data.token.total_supply).toLocaleString();
+                document.getElementById('circSupply').textContent =
+                    parseFloat(data.token.circulating_supply).toLocaleString();
+                document.getElementById('treasuryPct').textContent =
+                    data.token.treasury_percentage + '%';
+                document.getElementById('ethRatio').textContent =
+                    parseFloat(data.pricing.token_eth_ratio).toLocaleString(undefined, {maximumFractionDigits: 0});
+                document.getElementById('poolCount').textContent =
+                    data.tvl.pools_count;
+                document.getElementById('ethUsdPrice').textContent =
+                    '$' + parseFloat(data.pricing.eth_price_usd).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
+
+                // Update raw JSON display
+                document.getElementById('jsonData').value = JSON.stringify(data, null, 2);
+
+                // Update last updated
+                document.getElementById('lastUpdated').textContent =
+                    'Last Updated: ' + data.last_updated;
+
+                // Update cache status
+                document.getElementById('cacheStatus').innerHTML =
+                    `<br><strong>✅ Cache Status:</strong> Fresh data fetched<br>` +
+                    `<strong>ETag:</strong> ${newEtag || 'N/A'}`;
+
+                status.textContent = 'Live';
+                status.className = 'status';
+
+            } catch (error) {
+                console.error('Error fetching data:', error);
+                status.textContent = 'Error';
+                status.className = 'status error';
+                document.getElementById('cacheStatus').innerHTML =
+                    `<br><strong>❌ Error:</strong> ${error.message}`;
+            }
+        }
+
+        // Copy JSON to clipboard function
+        function copyToClipboard() {
+            const jsonText = document.getElementById('jsonData').value;
+            navigator.clipboard.writeText(jsonText).then(() => {
+                const statusSpan = document.getElementById('copyStatus');
+                statusSpan.style.display = 'inline';
+                setTimeout(() => {
+                    statusSpan.style.display = 'none';
+                }, 2000);
+            }).catch(err => {
+                console.error('Failed to copy: ', err);
+            });
+        }
+
+        // Initial fetch
+        fetchData();
+
+        // Refresh every 5 minutes (but will use cache if data hasn't changed)
+        setInterval(() => fetchData(), 5 * 60 * 1000);
+    </script>
+</body>
+</html>

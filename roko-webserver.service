@@ -1,0 +1,25 @@
+[Unit]
+Description=ROKO Token Data Web Server
+After=network.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=roctinam
+Group=roctinam
+WorkingDirectory=/home/roctinam/production-deploy/roko-token-extractor
+ExecStart=/usr/bin/python3 /home/roctinam/production-deploy/roko-token-extractor/serve_web.py --port 8187 --directory /home/roctinam/production-deploy/roko-token-extractor/public
+Restart=always
+RestartSec=10
+StandardOutput=append:/home/roctinam/production-deploy/roko-token-extractor/logs/webserver.log
+StandardError=append:/home/roctinam/production-deploy/roko-token-extractor/logs/webserver_error.log
+
+# Security settings
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=read-only
+ReadWritePaths=/home/roctinam/production-deploy/roko-token-extractor/logs
+
+[Install]
+WantedBy=multi-user.target

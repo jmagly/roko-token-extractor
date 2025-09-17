@@ -26,8 +26,60 @@ python update_rpc_endpoints.py
 python src/main.py
 ```
 
+### Production Web Server & Service Management
+```bash
+# Install systemd service (runs web server on port 8187)
+sudo ./install_service.sh
+
+# Service management commands
+sudo systemctl start roko-webserver       # Start web server
+sudo systemctl stop roko-webserver        # Stop web server
+sudo systemctl restart roko-webserver     # Restart web server
+sudo systemctl status roko-webserver      # Check service status
+sudo systemctl enable roko-webserver      # Enable auto-start on boot
+sudo systemctl disable roko-webserver     # Disable auto-start
+
+# View web server logs
+sudo journalctl -u roko-webserver -f      # Follow live logs
+tail -f logs/webserver.log                # Access logs
+tail -f logs/webserver_error.log          # Error logs
+
+# Manual web server (for testing)
+python serve_web.py --port 8187 --directory public
+
+# Test API endpoints
+curl http://localhost:8187/price          # API endpoint
+curl http://localhost:8187/               # Dashboard
+```
+
+### Automated Data Extraction (Cron)
+```bash
+# Set up 15-minute cron schedule
+crontab -e
+# Add: */15 * * * * /home/roctinam/roko-token-extractor/run_scheduled_extraction.sh >> /home/roctinam/roko-token-extractor/logs/cron.log 2>&1
+
+# Manual scheduled extraction
+./run_scheduled_extraction.sh
+
+# View extraction logs
+tail -f logs/scheduled_extraction.log     # Extraction logs
+tail -f logs/cron.log                     # Cron execution logs
+
+# Monitor extraction status
+ls -la public/roko-price.json             # Check last update time
+ls -la data/roko-price-*.json             # View archived extractions
+```
+
 ### Installation and Setup
 ```bash
+# System prerequisites (Ubuntu/Debian)
+sudo apt-get update
+sudo apt-get install python3-pip python3.12-venv
+
+# Create and activate virtual environment
+python3 -m venv venv
+source venv/bin/activate  # On Windows: venv\Scripts\activate
+
 # Install dependencies
 pip install -r requirements.txt
 
@@ -73,6 +125,24 @@ python src/main.py --validate
 - Maintains full precision in JSON output
 - Creates timestamped backups
 - Handles export to CSV format
+
+**Production Web Server** (`serve_web.py`)
+- HTTP server with CORS support and ETag caching
+- Serves JSON data on port 8187
+- Intelligent cache headers (15-minute TTL)
+- Clean API endpoint via symlink (`/price` → `roko-price.json`)
+
+**Service Management** (`roko-webserver.service`, `install_service.sh`)
+- Systemd service for automatic startup and monitoring
+- Security hardening (NoNewPrivileges, PrivateTmp, ProtectSystem)
+- Automatic restart on failure
+- Dedicated logging to separate files
+
+**Scheduled Extraction** (`run_scheduled_extraction.sh`)
+- Cron wrapper for automated data updates every 15 minutes
+- Creates timestamped archives in data/ directory
+- Comprehensive error handling and logging
+- Virtual environment management
 
 ### Configuration Management
 
