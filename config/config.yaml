@@ -1,5 +1,6 @@
 alchemy:
   api_key: ${ALCHEMY_API_KEY}
+  base_url: "https://eth-mainnet.g.alchemy.com/v2"
   enabled: true
   rate_limit: 100
 api_keys:
@@ -146,13 +147,18 @@ contracts:
     stateMutability: view
     type: function
 ethereum:
-  chain_id: 1
+  chain_id: ${CHAIN_ID}
   chainlist:
+    backup_file: data\backups\chainlist_backup_20250917_152257.json
     cache_duration_hours: 168
     cached_providers: 20
+    failed_providers: 10
+    health_tested: '2025-09-17T15:23:10.254871'
     last_updated: '2025-09-17T14:33:32.760434'
     max_providers: 20
     refresh_on_startup: true
+    success_rate: 50.0
+    successful_providers: 10
     total_providers: 20
     url: https://chainlist.org/rpcs.json
   gas_limit: 100000
@@ -164,7 +170,7 @@ ethereum:
     max_concurrent_requests: 5
     retry_attempts: 3
     retry_delay: 1
-    strategy: round_robin
+    strategy: random
 monitoring:
   export_format:
   - json
@@ -173,9 +179,9 @@ monitoring:
   log_level: INFO
   price_update_interval: 3600
 pools:
-  uniswap_v2_factory: 0x5C69bEe701ef814a2B6a3EDD4B1652CB9cc5aA6f
-  uniswap_v3_factory: 0x1F98431c8aD98523631AE4a59f267346ea31F984
-  weth_address: 0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2
+  uniswap_v2_factory: "${UNISWAP_V2_FACTORY}"
+  uniswap_v3_factory: "${UNISWAP_V3_FACTORY}"
+  weth_address: "${WETH_ADDRESS}"
 price_sources:
   coingecko:
     api_key: ${COINGECKO_API_KEY}
@@ -190,9 +196,14 @@ price_sources:
   uniswap:
     enabled: true
     rate_limit: 100
-roko_token:
-  address: 634460209752492759150162917838696066195990839192
-  decimals: 18
-  name: ROKO
-  symbol: ROKO
-  uniswap_pair: 1278979549828856515201214564315408281080422456062
+token:
+  address: "${TOKEN_ADDRESS}"
+  name: "${TOKEN_NAME}"
+  symbol: "${TOKEN_SYMBOL}"
+  decimals: 18  # Most ERC20 tokens use 18 decimals
+  treasury_wallets: "${TREASURY_WALLETS}"  # Comma-separated list of addresses to exclude from circulating supply
+
+stablecoins:
+  usdc_address: "${USDC_ADDRESS}"
+  usdt_address: "${USDT_ADDRESS}"
+  weth_address: "${WETH_ADDRESS}"

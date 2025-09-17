@@ -103,7 +103,8 @@ class RPCFetcher:
             self.logger.info("Using cached RPC endpoints")
             cached_data = self._load_cache()
             if cached_data and isinstance(cached_data, list):
-                return self._extract_ethereum_rpcs(cached_data)
+                rpcs = self._extract_ethereum_rpcs(cached_data)
+                return self._add_alchemy_if_available(rpcs)
         
         # Fetch fresh data
         self.logger.info("Cache expired or missing, fetching fresh data")
@@ -112,17 +113,44 @@ class RPCFetcher:
         if fresh_data and isinstance(fresh_data, list):
             # Save to cache
             self._save_cache(fresh_data)
-            return self._extract_ethereum_rpcs(fresh_data)
+            rpcs = self._extract_ethereum_rpcs(fresh_data)
+            return self._add_alchemy_if_available(rpcs)
         
         # Fallback to cached data even if expired
         self.logger.warning("Failed to fetch fresh data, using expired cache as fallback")
         cached_data = self._load_cache()
         if cached_data and isinstance(cached_data, list):
-            return self._extract_ethereum_rpcs(cached_data)
+            rpcs = self._extract_ethereum_rpcs(cached_data)
+            return self._add_alchemy_if_available(rpcs)
         
         # Return empty list if all else fails
         self.logger.error("No RPC endpoints available")
         return []
+    
+    def _add_alchemy_if_available(self, rpcs: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+        """Add Alchemy as highest priority provider if API key is available."""
+        import os
+        from dotenv import load_dotenv
+        load_dotenv()
+        
+        alchemy_api_key = os.getenv('ALCHEMY_API_KEY', '')
+        if alchemy_api_key and alchemy_api_key != 'your_alchemy_api_key_here':
+            # Check if Alchemy is already in the list
+            alchemy_exists = any('alchemy' in rpc.get('name', '').lower() for rpc in rpcs)
+            
+            if not alchemy_exists:
+                alchemy_rpc = {
+                    'name': 'Alchemy',
+                    'url': 'https://eth-mainnet.g.alchemy.com/v2',  # Will be constructed with API key
+                    'priority': 0,  # Highest priority
+                    'tracking': 'none',
+                    'isOpenSource': False,
+                    'description': 'Alchemy Ethereum Mainnet RPC'
+                }
+                rpcs.insert(0, alchemy_rpc)  # Insert at the beginning
+                self.logger.info("Added Alchemy as highest priority RPC provider")
+        
+        return rpcs
     
     def _extract_ethereum_rpcs(self, data: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
         """Extract Ethereum mainnet RPC endpoints from ChainList data."""
@@ -294,6 +322,10 @@ class RPCFetcher:
     def _calculate_priority(self, rpc: Dict[str, Any]) -> int:
         """Calculate priority score for RPC endpoint."""
         priority = 0
+        
+        # Highest priority for Alchemy (if API key is available)
+        if 'alchemy' in rpc.get('name', '').lower() or 'alchemy' in rpc.get('url', '').lower():
+            priority += 1000  # Much higher priority than others
         
         # Higher priority for open source
         if rpc.get('isOpenSource', False):

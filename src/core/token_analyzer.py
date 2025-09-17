@@ -120,7 +120,7 @@ class ROKOTokenAnalyzer:
                 self.rpc_client
             )
             
-            return pricing_data.get('token_price_usd', 0.0)
+            return pricing_data.get('usd_per_token', 0.0)
         except Exception as e:
             self.logger.error(f"Error getting ROKO price in USD: {e}")
             return 0.0
@@ -137,13 +137,41 @@ class ROKOTokenAnalyzer:
             return 0.0
     
     def get_circulating_supply(self) -> int:
-        """Get circulating supply (same as total supply for most tokens)."""
+        """Get circulating supply by excluding treasury wallets from total supply."""
         try:
-            metadata = self.get_token_metadata()
-            return metadata['total_supply']
+            from config.settings import Config
+            config = Config()
+            treasury_wallets = config.get_treasury_wallets()
+            
+            if not treasury_wallets:
+                # No treasury wallets configured, return total supply
+                metadata = self.get_token_metadata()
+                return metadata['total_supply']
+            
+            # Get total supply
+            total_supply = self.get_total_supply()
+            
+            # Calculate treasury holdings
+            treasury_holdings = 0
+            for wallet in treasury_wallets:
+                try:
+                    balance = self.rpc_client.get_token_balance(self.roko_address, wallet)
+                    treasury_holdings += balance
+                    self.logger.debug(f"Treasury wallet {wallet}: {balance} tokens")
+                except Exception as e:
+                    self.logger.warning(f"Error getting balance for treasury wallet {wallet}: {e}")
+            
+            # Calculate circulating supply
+            circulating_supply = total_supply - treasury_holdings
+            self.logger.info(f"Total supply: {total_supply}, Treasury holdings: {treasury_holdings}, Circulating supply: {circulating_supply}")
+            
+            return max(0, circulating_supply)  # Ensure non-negative
+            
         except Exception as e:
             self.logger.error(f"Error getting circulating supply: {e}")
-            return 0
+            # Fallback to total supply
+            metadata = self.get_token_metadata()
+            return metadata['total_supply']
     
     def get_total_supply(self) -> int:
         """Get total supply."""

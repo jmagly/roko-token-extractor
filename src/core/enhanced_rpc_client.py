@@ -41,17 +41,40 @@ class EnhancedEthereumRPCClient:
                 # Convert to load balancer format
                 provider_configs = []
                 for i, rpc in enumerate(rpc_providers):
+                    # Handle Alchemy URL construction specially
+                    if 'alchemy' in rpc['name'].lower():
+                        alchemy_config = self.settings._config.get('alchemy', {})
+                        base_url = alchemy_config.get('base_url', 'https://eth-mainnet.g.alchemy.com/v2')
+                        api_key = os.getenv('ALCHEMY_API_KEY', '')
+                        if api_key and api_key != 'your_alchemy_api_key_here':
+                            url = f"{base_url}/{api_key}"
+                        else:
+                            url = rpc['url']  # Fallback to ChainList URL
+                    else:
+                        url = rpc['url']
+                    
                     provider_config = {
                         'name': rpc['name'],
-                        'url': rpc['url'],
+                        'url': url,
                         'api_key': '${' + rpc['name'].upper() + '_API_KEY}' if rpc['name'] in ['alchemy', 'drpc', 'ankr', 'blastapi'] else '',
-                        'priority': i + 1,
+                        'priority': rpc.get('priority', i + 1),
                         'rate_limit': 100 if rpc['tracking'] == 'none' else 50,
                         'timeout': 30
                     }
                     provider_configs.append(provider_config)
                 
                 load_balancing_config = self.settings.ethereum.get('load_balancing', {})
+                
+                # Use priority strategy if Alchemy is available, otherwise use configured strategy
+                from dotenv import load_dotenv
+                load_dotenv()
+                alchemy_available = os.getenv('ALCHEMY_API_KEY') and os.getenv('ALCHEMY_API_KEY') != 'your_alchemy_api_key_here'
+                
+                if alchemy_available and any('alchemy' in p['name'].lower() for p in provider_configs):
+                    load_balancing_config = load_balancing_config.copy()
+                    load_balancing_config['strategy'] = 'priority'
+                    self.logger.info("Alchemy API key detected - using priority strategy for Alchemy-first load balancing")
+                
                 self.load_balancer = RPCLoadBalancer(provider_configs, load_balancing_config)
                 self.web3 = None  # Will be created per request
                 self.logger.info(f"Initialized RPC Load Balancer with {len(provider_configs)} providers")
@@ -136,6 +159,22 @@ class EnhancedEthereumRPCClient:
             self.logger.error(f"Error getting token balance: {e}")
             raise
     
+    def get_token_supply(self, token_address: str) -> int:
+        """Get total supply of a token."""
+        def _get_token_supply(web3, token_address):
+            token_abi = self.settings.contracts.get('erc20_abi', [])
+            contract = self.get_contract_instance(token_address, token_abi, web3)
+            return contract.functions.totalSupply().call()
+        
+        try:
+            if self.load_balancer:
+                return self.load_balancer.execute_request(_get_token_supply, token_address)
+            else:
+                return _get_token_supply(self.web3, token_address)
+        except Exception as e:
+            self.logger.error(f"Error getting token supply: {e}")
+            raise
+    
     def get_logs(self, address: str, topics: Optional[List[str]] = None, from_block: int = 0, to_block: str = 'latest') -> List[Dict[str, Any]]:
         """Get logs for a given address and topics."""
         def _get_logs(web3, address, topics, from_block, to_block):
@@ -213,7 +252,7 @@ class EnhancedEthereumRPCClient:
         try:
             from .price_oracle import PriceOracle
             oracle = PriceOracle()
-            return oracle.get_eth_price_usd()
+            return oracle.get_eth_price_usd(self)
         except Exception as e:
             self.logger.error(f"Error getting ETH price: {e}")
             return 2000.0  # Fallback value

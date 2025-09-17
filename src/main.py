@@ -45,21 +45,21 @@ class ROKODataExtractor:
         # Initialize analyzers
         self.token_analyzer = ROKOTokenAnalyzer(
             rpc_client=self.rpc_client,
-            roko_address=self.config.get_roko_address()
+            roko_address=self.config.get_token_address()
         )
         
         self.pool_monitor = UniswapPoolMonitor(
             rpc_client=self.rpc_client,
-            roko_address=self.config.get_roko_address(),
-            uniswap_v2_factory=self.config.pools.get('uniswap_v2_factory'),
-            uniswap_v3_factory=self.config.pools.get('uniswap_v3_factory'),
-            weth_address=self.config.pools.get('weth_address')
+            roko_address=self.config.get_token_address(),
+            uniswap_v2_factory=self.config.get_uniswap_v2_factory(),
+            uniswap_v3_factory=self.config.get_uniswap_v3_factory(),
+            weth_address=self.config.get_weth_address()
         )
         
         # Initialize analytics and historical tracking
         self.analytics = TokenAnalytics(
             rpc_client=self.rpc_client,
-            token_address=self.config.get_roko_address()
+            token_address=self.config.get_token_address()
         )
         
         self.historical_tracker = HistoricalTracker()

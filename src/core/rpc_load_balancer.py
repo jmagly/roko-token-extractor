@@ -12,6 +12,7 @@ import requests
 from web3 import Web3
 from web3.exceptions import ContractLogicError
 from utils.rpc_ignore_list import RPCIgnoreList
+from utils.rpc_rate_limit_list import RPCRateLimitList
 
 
 class LoadBalancingStrategy(Enum):
@@ -32,6 +33,7 @@ class RPCProvider:
     timeout: int
     is_healthy: bool = True
     last_used: float = 0.0
+    first_request_time: float = 0.0
     request_count: int = 0
     error_count: int = 0
     last_error: Optional[str] = None
@@ -53,6 +55,7 @@ class RPCLoadBalancer:
         self.current_index = 0
         self.config = config
         self.ignore_list = RPCIgnoreList()
+        self.rate_limit_list = RPCRateLimitList()
         
         # Initialize providers
         for provider_config in providers:
@@ -89,10 +92,10 @@ class RPCLoadBalancer:
             self._perform_health_checks()
             self.last_health_check = time.time()
         
-        # Filter healthy providers and exclude ignored ones
+        # Filter healthy providers and exclude ignored/rate-limited ones
         healthy_providers = [
             p for p in self.providers 
-            if p.is_healthy and not self.ignore_list.is_ignored(p.url)
+            if p.is_healthy and not self.ignore_list.is_ignored(p.url) and not self.rate_limit_list.is_rate_limited(p.url)
         ]
         
         if not healthy_providers:
@@ -116,9 +119,18 @@ class RPCLoadBalancer:
         self.ignore_list.clear_ignore_list()
         self.logger.info("Cleared RPC ignore list due to endpoint refresh")
     
+    def clear_rate_limit_list(self) -> None:
+        """Clear the rate limit list (called when refreshing RPC endpoints from ChainList)."""
+        self.rate_limit_list.clear_rate_limit_list()
+        self.logger.info("Cleared RPC rate limit list due to endpoint refresh")
+    
     def get_ignore_list_info(self) -> Dict[str, Any]:
         """Get information about the current ignore list."""
         return self.ignore_list.get_ignore_list_info()
+    
+    def get_rate_limit_list_info(self) -> Dict[str, Any]:
+        """Get information about the current rate limit list."""
+        return self.rate_limit_list.get_rate_limit_list_info()
     
     def _round_robin_selection(self, providers: List[RPCProvider]) -> RPCProvider:
         """Select provider using round-robin strategy."""
@@ -182,6 +194,12 @@ class RPCLoadBalancer:
             # Check rate limiting
             if not self._check_rate_limit(provider):
                 self.logger.warning(f"Rate limit exceeded for {provider.name}, trying next provider")
+                # Add to rate limit list for temporary cooldown
+                self.rate_limit_list.add_rate_limited_endpoint(
+                    provider.url, 
+                    429, 
+                    f"Client-side rate limit exceeded for {provider.name}"
+                )
                 continue
             
             try:
@@ -191,6 +209,8 @@ class RPCLoadBalancer:
                 # Execute the request
                 self.active_requests += 1
                 provider.request_count += 1
+                if provider.first_request_time == 0.0:
+                    provider.first_request_time = time.time()
                 provider.last_used = time.time()
                 
                 result = request_func(web3, *args, **kwargs)
@@ -208,7 +228,7 @@ class RPCLoadBalancer:
                 
                 self.logger.warning(f"Request failed with {provider.name}: {e}")
                 
-                # Add to ignore list if it's a non-404 error
+                # Handle different error types
                 error_code = None
                 if hasattr(e, 'response') and hasattr(e.response, 'status_code'):
                     error_code = e.response.status_code
@@ -219,12 +239,21 @@ class RPCLoadBalancer:
                     if match:
                         error_code = int(match.group(1))
                 
-                if error_code and error_code != 404:
-                    self.ignore_list.add_failing_endpoint(
-                        provider.url, 
-                        error_code, 
-                        str(e)
-                    )
+                if error_code:
+                    if error_code == 429:
+                        # Add to rate limit list for temporary cooldown
+                        self.rate_limit_list.add_rate_limited_endpoint(
+                            provider.url, 
+                            error_code, 
+                            str(e)
+                        )
+                    elif error_code != 404:
+                        # Add to ignore list for other non-404 errors
+                        self.ignore_list.add_failing_endpoint(
+                            provider.url, 
+                            error_code, 
+                            str(e)
+                        )
                 
                 # Mark provider as unhealthy if too many errors
                 if provider.error_count >= 5:
@@ -256,10 +285,11 @@ class RPCLoadBalancer:
         
         # Simple rate limiting check (requests per minute)
         if provider.request_count > 0:
-            time_since_first = current_time - provider.last_used
+            time_since_first = current_time - provider.first_request_time
             if time_since_first < 60:  # Within last minute
                 requests_per_minute = provider.request_count / (time_since_first / 60)
                 if requests_per_minute > provider.rate_limit:
+                    self.logger.debug(f"Rate limit exceeded for {provider.name}: {requests_per_minute:.2f} req/min > {provider.rate_limit}")
                     return False
         
         return True

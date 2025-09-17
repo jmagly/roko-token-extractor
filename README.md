@@ -1,6 +1,6 @@
-# ROKO Token Data Extractor
+# Token Data Extractor
 
-A comprehensive tool for extracting real-time data for the $ROKO token on Ethereum, including pricing, liquidity, volume, and holder information.
+A comprehensive tool for extracting real-time data for any ERC20 token on Ethereum, including pricing, liquidity, volume, and holder information. Easily configurable to track different tokens and stablecoins.
 
 ## Features
 
@@ -22,11 +22,29 @@ A comprehensive tool for extracting real-time data for the $ROKO token on Ethere
 2. **Configure environment:**
    ```bash
    cp env.example .env
-   # Edit .env with your API keys
+   # Edit .env with your API keys and token addresses
    ```
+   
+   **Key Configuration Options:**
+   - `TOKEN_ADDRESS`: The ERC20 token contract address to track
+   - `TOKEN_NAME` & `TOKEN_SYMBOL`: Display names for the token
+   - `USDC_ADDRESS` & `USDT_ADDRESS`: Stablecoin addresses for ETH pricing
+   - `WETH_ADDRESS`: Wrapped ETH address for token pairs
+   - `UNISWAP_V2_FACTORY` & `UNISWAP_V3_FACTORY`: Uniswap factory addresses
 
 3. **Run data extraction:**
    ```bash
+   python update_roko_data.py
+   ```
+   
+   **To track a different token:**
+   ```bash
+   # Edit .env file
+   TOKEN_ADDRESS=0xYourTokenAddress
+   TOKEN_NAME=YourTokenName
+   TOKEN_SYMBOL=YOUR
+   
+   # Run extraction
    python update_roko_data.py
    ```
 
@@ -35,6 +53,38 @@ A comprehensive tool for extracting real-time data for the $ROKO token on Ethere
    chmod +x setup_cronjob.sh
    ./setup_cronjob.sh
    ```
+
+## Flexible Configuration
+
+The tool is designed to be easily configurable for different tokens and stablecoins:
+
+### Supported Tokens
+- **Any ERC20 token** on Ethereum mainnet
+- **Any stablecoin** for ETH pricing (USDC, USDT, DAI, etc.)
+- **Custom token pairs** via Uniswap V2/V3
+
+### Configuration Examples
+
+**Track USDC:**
+```bash
+TOKEN_ADDRESS=0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48
+TOKEN_NAME=USD Coin
+TOKEN_SYMBOL=USDC
+```
+
+**Track with DAI pricing:**
+```bash
+# Add DAI address to stablecoins section in .env
+DAI_ADDRESS=0x6B175474E89094C44Da98b954EedeAC495271d0F
+# Update config.yaml to use DAI for ETH pricing
+```
+
+**Track on different chain:**
+```bash
+CHAIN_ID=137  # Polygon
+CHAIN_NAME=polygon
+# Update RPC endpoints for Polygon
+```
 
 ## Data Output
 
