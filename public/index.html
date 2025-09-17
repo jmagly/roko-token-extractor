@@ -250,9 +250,9 @@ fetch('<span id="apiUrl"></span>')
 
         let lastEtag = null;
 
-        async function fetchData() {
+        async function fetchData(forceRefresh = false) {
             const status = document.getElementById('status');
-            status.textContent = 'Loading...';
+            status.textContent = 'Checking...';
             status.className = 'status loading';
 
             try {
@@ -263,28 +263,43 @@ fetch('<span id="apiUrl"></span>')
 
                 const response = await fetch(endpoint, {
                     headers,
-                    cache: 'default'
+                    cache: forceRefresh ? 'no-cache' : 'default'
                 });
 
                 if (response.status === 304) {
-                    // Not Modified - using cached data
+                    // Not Modified - data hasn't changed since last fetch
                     document.getElementById('cacheStatus').innerHTML =
-                        '<br><strong>✅ Cache Status:</strong> Using cached data (304 Not Modified)';
-                    status.textContent = 'Live (Cached)';
+                        '<br><strong>✅ Cache Status:</strong> Data unchanged (304 Not Modified)';
+                    status.textContent = 'Live';
                     status.className = 'status';
-                    return;
+                    // Don't return - let the cached version update the display if needed
+                    // This ensures the UI stays in sync even if opened with stale browser cache
                 }
 
-                if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
-                }
+                let data;
+                if (response.status !== 304) {
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
 
-                const newEtag = response.headers.get('ETag');
-                if (newEtag) {
-                    lastEtag = newEtag;
-                }
+                    const newEtag = response.headers.get('ETag');
+                    if (newEtag) {
+                        lastEtag = newEtag;
+                    }
 
-                const data = await response.json();
+                    data = await response.json();
+                } else {
+                    // For 304, try to use cached response
+                    const cachedResponse = await fetch(endpoint, {
+                        cache: 'only-if-cached'
+                    });
+                    if (cachedResponse.ok) {
+                        data = await cachedResponse.json();
+                    } else {
+                        // If no cache available, force a fresh fetch
+                        return fetchData(true);
+                    }
+                }
 
                 // Helper function to apply smaller font for numbers with many decimal places
                 const formatWithFontSize = (elementId, value, prefix = '', suffix = '') => {
@@ -362,10 +377,12 @@ fetch('<span id="apiUrl"></span>')
                     'Last Updated: ' + localDateString;
 
                 // Update cache status with truncated ETag
-                const truncatedEtag = newEtag ? newEtag.substring(1, 9) + '...' : 'N/A';
-                document.getElementById('cacheStatus').innerHTML =
-                    `<br><strong>✅ Cache Status:</strong> Fresh data fetched<br>` +
-                    `<strong>ETag:</strong> ${truncatedEtag}`;
+                if (response.status !== 304) {
+                    const truncatedEtag = lastEtag ? lastEtag.substring(1, 9) + '...' : 'N/A';
+                    document.getElementById('cacheStatus').innerHTML =
+                        `<br><strong>✅ Cache Status:</strong> Fresh data fetched<br>` +
+                        `<strong>ETag:</strong> ${truncatedEtag}`;
+                }
 
                 status.textContent = 'Live';
                 status.className = 'status';
@@ -396,8 +413,9 @@ fetch('<span id="apiUrl"></span>')
         // Initial fetch
         fetchData();
 
-        // Refresh every 5 minutes (but will use cache if data hasn't changed)
-        setInterval(() => fetchData(), 5 * 60 * 1000);
+        // Refresh every 15 minutes to match data update interval
+        // This will check ETags and only update if data has actually changed
+        setInterval(() => fetchData(), 15 * 60 * 1000);
     </script>
 </body>
 </html>
