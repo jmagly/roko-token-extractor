@@ -1,15 +1,17 @@
 # Token Data Extractor
 
-A comprehensive tool for extracting real-time data for any ERC20 token on Ethereum, including pricing, liquidity, volume, and holder information. Easily configurable to track different tokens and stablecoins.
+A production-ready tool for extracting real-time data for any ERC20 token on Ethereum, including pricing, TVL, volume, and holder information. Designed for automated deployment with static webservers and cronjobs.
 
 ## Features
 
-- **Real-time Token Data**: Name, symbol, decimals, total supply, holder count
-- **Pool-based Pricing**: Direct calculation from Uniswap pools using ROKO:ETH ratio
-- **Liquidity Analysis**: Pool reserves, total liquidity, and volume metrics
+- **Real-time Token Data**: Name, symbol, decimals, total supply, circulating supply
+- **Pool-based Pricing**: Direct calculation from Uniswap pools using token:ETH ratio
+- **TVL Analysis**: Pool reserves, total value locked, and volume metrics
+- **Treasury Exclusion**: Calculate circulating supply by excluding treasury wallets
 - **Holder Extraction**: Complete holder list with Alchemy API integration
-- **Multiple RPC Providers**: Load-balanced RPC calls with failover
+- **Multiple RPC Providers**: Load-balanced RPC calls with failover and health monitoring
 - **Web-ready Output**: JSON files optimized for web delivery
+- **Production Deployment**: Command-line parameters for custom output paths
 - **Cronjob Support**: Automated hourly data updates
 
 ## Quick Start
@@ -28,6 +30,7 @@ A comprehensive tool for extracting real-time data for any ERC20 token on Ethere
    **Key Configuration Options:**
    - `TOKEN_ADDRESS`: The ERC20 token contract address to track
    - `TOKEN_NAME` & `TOKEN_SYMBOL`: Display names for the token
+   - `TREASURY_WALLETS`: Comma-separated list of treasury wallet addresses to exclude from circulating supply
    - `USDC_ADDRESS` & `USDT_ADDRESS`: Stablecoin addresses for ETH pricing
    - `WETH_ADDRESS`: Wrapped ETH address for token pairs
    - `UNISWAP_V2_FACTORY` & `UNISWAP_V3_FACTORY`: Uniswap factory addresses
@@ -48,13 +51,85 @@ A comprehensive tool for extracting real-time data for any ERC20 token on Ethere
    python update_roko_data.py
    ```
 
-4. **Set up automated updates:**
-   ```bash
-   chmod +x setup_cronjob.sh
-   ./setup_cronjob.sh
-   ```
+## Production Deployment
 
-## Flexible Configuration
+### Command Line Parameters
+
+The tool supports custom output paths for production deployment:
+
+```bash
+python update_roko_data.py --help
+```
+
+**Available Parameters:**
+- `--output-dir, -o`: Output directory for JSON files (default: `web_delivery`)
+- `--export-dir, -e`: Export directory for CSV/JSON exports (default: `data/exports`)
+- `--filename, -f`: Main output filename (default: `latest.json`)
+- `--timestamped, -t`: Also create timestamped file
+
+### Static Webserver Deployment
+
+**Basic deployment:**
+```bash
+python update_roko_data.py --output-dir /var/www/html --filename roko.json
+```
+
+**With timestamped backups:**
+```bash
+python update_roko_data.py --output-dir /var/www/html --filename roko.json --timestamped
+```
+
+**Custom export location:**
+```bash
+python update_roko_data.py --output-dir /var/www/html --export-dir /var/log/roko --filename roko.json
+```
+
+### Cronjob Setup
+
+**Add to crontab for hourly updates:**
+```bash
+# Edit crontab
+crontab -e
+
+# Add this line for hourly updates
+0 * * * * cd /path/to/chain-data-extractor && python update_roko_data.py --output-dir /var/www/html --filename roko.json --timestamped
+```
+
+**Systemd service (recommended for production):**
+```bash
+# Create service file
+sudo nano /etc/systemd/system/roko-data.service
+
+[Unit]
+Description=ROKO Token Data Extractor
+After=network.target
+
+[Service]
+Type=oneshot
+User=www-data
+WorkingDirectory=/path/to/chain-data-extractor
+ExecStart=/usr/bin/python3 update_roko_data.py --output-dir /var/www/html --filename roko.json --timestamped
+
+# Create timer
+sudo nano /etc/systemd/system/roko-data.timer
+
+[Unit]
+Description=Run ROKO Data Extractor hourly
+Requires=roko-data.service
+
+[Timer]
+OnCalendar=hourly
+Persistent=true
+
+[Install]
+WantedBy=timers.target
+
+# Enable and start
+sudo systemctl enable roko-data.timer
+sudo systemctl start roko-data.timer
+```
+
+## Configuration
 
 The tool is designed to be easily configurable for different tokens and stablecoins:
 
@@ -79,16 +154,9 @@ DAI_ADDRESS=0x6B175474E89094C44Da98b954EedeAC495271d0F
 # Update config.yaml to use DAI for ETH pricing
 ```
 
-**Track on different chain:**
-```bash
-CHAIN_ID=137  # Polygon
-CHAIN_NAME=polygon
-# Update RPC endpoints for Polygon
-```
-
 ## Data Output
 
-The tool generates comprehensive JSON data in `web_delivery/latest.json`:
+The tool generates comprehensive JSON data with full precision and treasury exclusion:
 
 ```json
 {
@@ -96,112 +164,111 @@ The tool generates comprehensive JSON data in `web_delivery/latest.json`:
   "datetime": "2025-09-17T13:24:17.805587",
   "last_updated": "2025-09-17 13:24:17 UTC",
   "token": {
+    "address": "0x6f222e04f6c53cc688ffb0abe7206aac66a8ff98",
     "name": "ROKO",
     "symbol": "ROKO",
-    "address": "0x6f222e04f6c53cc688ffb0abe7206aac66a8ff98",
     "decimals": 18,
-    "total_supply": 369369369369.0,
-    "holders": 3992
+    "total_supply": "369369369369000000000000000000",
+    "circulating_supply": "208028320498427809988757442407",
+    "treasury_holdings": "161341048870572190011242557593",
+    "treasury_percentage": "43.68"
   },
   "pricing": {
-    "roko_eth_ratio": 299367383.967667,
-    "eth_per_roko": 3.340377254016438e-09,
-    "usd_per_roko": 1.4958008920850366e-05,
-    "eth_price_usd": 4477.94,
-    "market_cap_usd": 5535764.67,
-    "price_source": "uniswap_pool"
+    "token_eth_ratio": "302407288.564126789569854736",
+    "eth_per_token": "0.000000003306798605",
+    "usd_per_token": "0.000015000710591132",
+    "eth_price_usd": "4537.507941229586",
+    "market_cap_usd": "3120572.63",
+    "total_market_cap_usd": "5540803.01"
   },
-  "liquidity": {
-    "total_liquidity_usd": 436275.39,
+  "tvl": {
+    "total_tvl_usd": "439763.97",
     "pools_count": 1,
     "pools": [...]
   },
   "volume": {
-    "volume_24h_usd": 21813.77,
-    "volume_7d_usd": 152696.39,
-    "volume_30d_usd": 654413.09
+    "volume_24h_usd": "21988.20",
+    "volume_7d_usd": "153915.40",
+    "volume_30d_usd": "659640.00"
   }
 }
 ```
 
-## Pricing Logic
+## Key Features
 
-The tool uses a standardized ROKO:ETH ratio calculation:
+### Treasury Exclusion
+- Calculate circulating supply by excluding treasury wallets
+- Configurable list of excluded addresses in `.env`
+- Accurate market cap calculation based on circulating supply
 
-1. **Pool Analysis**: `ROKO_reserve / WETH_reserve = ROKO:ETH ratio`
-2. **Price Calculation**: `1 / ROKO:ETH_ratio = ETH per ROKO`
-3. **USD Conversion**: `ETH per ROKO × ETH price = USD per ROKO`
+### Full Precision Data
+- All numerical values stored with full decimal precision
+- String format prevents floating-point precision loss
+- Console display with comma formatting for readability
 
-## Configuration
+### RPC Load Balancing
+- Automatic RPC endpoint discovery from ChainList.org
+- Health testing and failover management
+- Rate limit handling and temporary exclusion
+- Alchemy priority mode when API key is available
 
-### RPC Providers
-Configure multiple RPC providers in `config/config.yaml` for load balancing and failover.
-
-### API Keys
-Set up API keys in `.env`:
-- `ALCHEMY_API_KEY`: For enhanced holder and volume data
-- `COINGECKO_API_KEY`: For ETH price data (optional)
-
-## Usage
-
-### Manual Data Extraction
-```bash
-# Basic extraction
-python run.py
-
-# With exports
-python run.py --export json csv
-
-# With holder extraction
-python run.py --holders
-
-# With analytics
-python run.py --analytics
-```
-
-### Automated Updates
-```bash
-# Set up cronjob for hourly updates
-crontab -e
-# Add: 0 * * * * cd /path/to/chain-data-extractor && python3 update_roko_data.py >> logs/cron.log 2>&1
-```
+### Production Ready
+- Command-line parameters for custom deployment
+- Cronjob and systemd service support
+- Comprehensive error handling and logging
+- Web-optimized JSON output
 
 ## File Structure
 
 ```
 chain-data-extractor/
-├── src/
-│   ├── core/           # Core extraction logic
-│   ├── config/         # Configuration management
-│   └── utils/          # Utility functions
+├── src/                    # Source code
+│   ├── core/              # Core extraction logic
+│   ├── config/            # Configuration management
+│   └── utils/             # Utility functions
 ├── config/
-│   └── config.yaml     # Main configuration
-├── web_delivery/       # Web-ready JSON files
-├── data/exports/       # Export files
-├── logs/              # Log files
-├── update_roko_data.py # Main cronjob script
-└── run.py             # CLI interface
+│   └── config.yaml        # Main configuration
+├── data/                  # Generated data (gitignored)
+│   ├── exports/           # CSV/JSON exports
+│   ├── backups/           # ChainList backups
+│   └── historical/        # Historical data
+├── web_delivery/          # Web-ready JSON files (gitignored)
+├── logs/                  # Log files (gitignored)
+├── update_roko_data.py    # Main production script
+├── update_rpc_endpoints.py # RPC management script
+├── requirements.txt       # Python dependencies
+├── env.example           # Environment template
+└── README.md             # This file
 ```
+
+## Handover Notes
+
+### Production Deployment Checklist
+1. ✅ **Environment Setup**: Copy `env.example` to `.env` and configure
+2. ✅ **Dependencies**: Install with `pip install -r requirements.txt`
+3. ✅ **Test Run**: Execute `python update_roko_data.py` to verify
+4. ✅ **Custom Paths**: Use `--output-dir` for webserver deployment
+5. ✅ **Automation**: Set up cronjob or systemd service
+6. ✅ **Monitoring**: Check logs in `logs/` directory
+
+### Key Files for Next Team
+- **`update_roko_data.py`**: Main production script with CLI parameters
+- **`update_rpc_endpoints.py`**: RPC endpoint management
+- **`src/main.py`**: CLI interface for testing and development
+- **`config/config.yaml`**: Main configuration file
+- **`.env`**: Environment variables (create from `env.example`)
+
+### Maintenance Tasks
+- **Weekly**: Run `python update_rpc_endpoints.py` to refresh RPC endpoints
+- **Monitor**: Check logs for RPC failures and rate limits
+- **Backup**: Ensure `data/backups/` contains recent ChainList data
+- **Updates**: Monitor for dependency updates in `requirements.txt`
 
 ## Requirements
 
 - Python 3.8+
-- web3.py
-- requests
-- pyyaml
-- schedule (for cronjob setup)
-
-## License
-
-MIT License - see LICENSE file for details.
-
-## Contributing
-
-1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Submit a pull request
+- See `requirements.txt` for complete dependency list
 
 ## Support
 
-For issues and questions, please open an issue on GitHub.
+For issues or questions, please check the logs in `logs/` directory and review the configuration in `config/config.yaml` and `.env`.
