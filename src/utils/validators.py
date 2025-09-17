@@ -89,9 +89,18 @@ class DataValidator:
             
             # Validate pricing data
             pricing = token_data.get('pricing', {})
-            if not all(isinstance(pricing.get(key), (int, float)) for key in ['price_eth', 'price_usd', 'market_cap_usd']):
-                self.logger.error("Invalid pricing data types")
-                return False
+            for key in ['eth_per_token', 'usd_per_token', 'market_cap_usd']:
+                value = pricing.get(key)
+                if value is not None and not isinstance(value, (int, float, str)):
+                    self.logger.error(f"Invalid pricing data type for {key}: {type(value)}")
+                    return False
+                # If it's a string, try to convert to float to validate
+                if isinstance(value, str):
+                    try:
+                        float(value)
+                    except ValueError:
+                        self.logger.error(f"Invalid pricing data value for {key}: {value}")
+                        return False
             
             return True
             

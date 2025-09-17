@@ -1,14 +1,6 @@
 {
-  "rate_limited_endpoints": {
-    "https://ethereum-rpc.publicnode.com": {
-      "timestamp": 1758144313.8450851,
-      "rate_limited_at": "2025-09-17T17:25:13.845085",
-      "error_code": 429,
-      "error_message": "Client-side rate limit exceeded for publicnode",
-      "cooldown_until": 1758144613.8450851
-    }
-  },
-  "last_updated": "2025-09-17T17:25:13.845085",
-  "total_rate_limited": 1,
+  "rate_limited_endpoints": {},
+  "last_updated": "2025-09-17T18:08:40.720020",
+  "total_rate_limited": 0,
   "cooldown_minutes": 5.0
 }

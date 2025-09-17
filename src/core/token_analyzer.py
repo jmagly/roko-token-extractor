@@ -326,8 +326,8 @@ class ROKOTokenAnalyzer:
                 'timestamp': int(time.time()),
                 'token_metadata': metadata,
                 'pricing': {
-                    'price_eth': price_eth,
-                    'price_usd': price_usd,
+                    'eth_per_token': price_eth,
+                    'usd_per_token': price_usd,
                     'market_cap_usd': market_cap
                 },
                 'supply': {

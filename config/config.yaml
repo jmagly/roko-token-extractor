@@ -1,14 +1,14 @@
 alchemy:
-  api_key: ${ALCHEMY_API_KEY}
-  base_url: "https://eth-mainnet.g.alchemy.com/v2"
+  api_key: Mh3_rWD0SMfMiVVl-F9p6
+  base_url: https://eth-mainnet.g.alchemy.com/v2
   enabled: true
   rate_limit: 100
 api_keys:
-  alchemy: ${ALCHEMY_API_KEY}
-  ankr: ${ANKR_API_KEY}
-  blastapi: ${BLASTAPI_API_KEY}
-  coingecko: ${COINGECKO_API_KEY}
-  drpc: ${DRPC_API_KEY}
+  alchemy: Mh3_rWD0SMfMiVVl-F9p6
+  ankr: your_ankr_api_key_here
+  blastapi: your_blastapi_api_key_here
+  coingecko: your_coingecko_api_key_here
+  drpc: your_drpc_api_key_here
 contracts:
   erc20_abi:
   - name: name
@@ -147,18 +147,18 @@ contracts:
     stateMutability: view
     type: function
 ethereum:
-  chain_id: ${CHAIN_ID}
+  chain_id: 1
   chainlist:
-    backup_file: data\backups\chainlist_backup_20250917_152257.json
+    backup_file: data\backups\chainlist_backup_20250917_180830.json
     cache_duration_hours: 168
     cached_providers: 20
-    failed_providers: 10
-    health_tested: '2025-09-17T15:23:10.254871'
+    failed_providers: 9
+    health_tested: '2025-09-17T18:08:40.774863'
     last_updated: '2025-09-17T14:33:32.760434'
     max_providers: 20
     refresh_on_startup: true
-    success_rate: 50.0
-    successful_providers: 10
+    success_rate: 55.0
+    successful_providers: 11
     total_providers: 20
     url: https://chainlist.org/rpcs.json
   gas_limit: 100000
@@ -179,12 +179,12 @@ monitoring:
   log_level: INFO
   price_update_interval: 3600
 pools:
-  uniswap_v2_factory: "${UNISWAP_V2_FACTORY}"
-  uniswap_v3_factory: "${UNISWAP_V3_FACTORY}"
-  weth_address: "${WETH_ADDRESS}"
+  uniswap_v2_factory: '0x5C69bEe701ef814a2B6a3EDD4B1652CB9cc5aA6f'
+  uniswap_v3_factory: '0x1F98431c8aD98523631AE4a59f267346ea31F984'
+  weth_address: '0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2'
 price_sources:
   coingecko:
-    api_key: ${COINGECKO_API_KEY}
+    api_key: your_coingecko_api_key_here
     enabled: true
     rate_limit: 50
   dexscreener:
@@ -196,14 +196,13 @@ price_sources:
   uniswap:
     enabled: true
     rate_limit: 100
-token:
-  address: "${TOKEN_ADDRESS}"
-  name: "${TOKEN_NAME}"
-  symbol: "${TOKEN_SYMBOL}"
-  decimals: 18  # Most ERC20 tokens use 18 decimals
-  treasury_wallets: "${TREASURY_WALLETS}"  # Comma-separated list of addresses to exclude from circulating supply
-
 stablecoins:
-  usdc_address: "${USDC_ADDRESS}"
-  usdt_address: "${USDT_ADDRESS}"
-  weth_address: "${WETH_ADDRESS}"
+  usdc_address: '0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48'
+  usdt_address: '0xdAC17F958D2ee523a2206206994597C13D831ec7'
+  weth_address: '0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2'
+token:
+  address: '0x6f222e04f6c53cc688ffb0abe7206aac66a8ff98'
+  decimals: 18
+  name: ROKO
+  symbol: ROKO
+  treasury_wallets: '0xc987aaa4ede4ab964883c5a768e57199643a593e'
