@@ -369,7 +369,11 @@ fetch('<span id="apiUrl"></span>')
                 document.getElementById('jsonData').value = JSON.stringify(data, null, 2);
 
                 // Update last updated with local timezone conversion
-                const utcDate = new Date(data.datetime + 'Z'); // Add Z to ensure UTC parsing
+                // Handle both formats: with and without timezone indicator
+                const dateStr = data.datetime.endsWith('Z') || data.datetime.includes('+')
+                    ? data.datetime
+                    : data.datetime + 'Z';
+                const utcDate = new Date(dateStr);
                 const localDateString = utcDate.toLocaleString(undefined, {
                     year: 'numeric',
                     month: 'short',

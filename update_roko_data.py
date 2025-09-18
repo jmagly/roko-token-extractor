@@ -9,7 +9,7 @@ import time
 import sys
 import logging
 import argparse
-from datetime import datetime
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Dict, Any, Optional
 
@@ -178,8 +178,8 @@ def extract_roko_data():
         # 3. Compile comprehensive data with full precision
         comprehensive_data = {
             'timestamp': int(time.time()),
-            'datetime': datetime.now().isoformat(),
-            'last_updated': datetime.now().strftime('%Y-%m-%d %H:%M:%S UTC'),
+            'datetime': datetime.now(timezone.utc).isoformat(),
+            'last_updated': datetime.now(timezone.utc).strftime('%Y-%m-%d %H:%M:%S UTC'),
             'token': {
                 'name': token_metadata.get('name', 'N/A'),
                 'symbol': token_metadata.get('symbol', 'N/A'),
@@ -214,7 +214,7 @@ def extract_roko_data():
             },
             'summary': {
                 'status': 'success',
-                'extraction_time': datetime.now().isoformat(),
+                'extraction_time': datetime.now(timezone.utc).isoformat(),
                 'data_quality': 'high' if total_tvl > 0 else 'medium'
             }
         }
@@ -226,8 +226,8 @@ def extract_roko_data():
         logger.error(f"Error in data extraction: {e}")
         return {
             'timestamp': int(time.time()),
-            'datetime': datetime.now().isoformat(),
-            'last_updated': datetime.now().strftime('%Y-%m-%d %H:%M:%S UTC'),
+            'datetime': datetime.now(timezone.utc).isoformat(),
+            'last_updated': datetime.now(timezone.utc).strftime('%Y-%m-%d %H:%M:%S UTC'),
             'error': str(e),
             'status': 'error'
         }
@@ -250,7 +250,7 @@ def save_web_data(data, output_dir="web_delivery", filename="latest.json", creat
         
         # Create timestamped file if requested
         if create_timestamped:
-            timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+            timestamp = datetime.now(timezone.utc).strftime('%Y%m%d_%H%M%S')
             timestamped_filename = f"roko_data_{timestamp}.json"
             timestamped_filepath = web_dir / timestamped_filename
             with open(timestamped_filepath, 'w') as f:
@@ -277,7 +277,7 @@ def export_price_data(data: Dict[str, Any], token_symbol: str, logger, export_di
         # Create price data structure
         price_data = {
             'timestamp': data.get('timestamp', int(time.time())),
-            'datetime': data.get('datetime', datetime.now().isoformat()),
+            'datetime': data.get('datetime', datetime.now(timezone.utc).isoformat()),
             'token': {
                 'name': token.get('name', 'N/A'),
                 'symbol': token.get('symbol', 'N/A'),
