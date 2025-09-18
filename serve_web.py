@@ -95,8 +95,15 @@ class CORSRequestHandler(SimpleHTTPRequestHandler):
                 return
 
         # For JSON files (including symlinked files), use smart ETag
-        if path.endswith('.json') or path.endswith('/price'):
-            self.serve_json_file(path)
+        # Check if it's a JSON file or the /price endpoint
+        if path.endswith('.json') or self.path == '/price' or path.endswith('/price'):
+            # Resolve symlinks to get the actual file
+            real_path = os.path.realpath(path)
+            # Make sure the resolved path exists and is a JSON file
+            if os.path.exists(real_path) and (real_path.endswith('.json') or os.path.basename(real_path) == 'roko-price.json'):
+                self.serve_json_file(real_path)
+            else:
+                self.serve_json_file(path)
             return
         else:
             # For non-JSON files, use standard handling
@@ -105,7 +112,7 @@ class CORSRequestHandler(SimpleHTTPRequestHandler):
     def end_headers(self):
         """Add CORS headers to all responses (for non-JSON files)."""
         # Only add these if not already set (JSON files handle their own)
-        if not self.path.endswith('.json'):
+        if not self.path.endswith('.json') and self.path != '/price':
             self.send_header('Access-Control-Allow-Origin', '*')
             self.send_header('Access-Control-Allow-Methods', 'GET, OPTIONS')
             self.send_header('Access-Control-Allow-Headers', 'Content-Type')
