@@ -322,14 +322,20 @@ fetch('<span id="apiUrl"></span>')
                 const ethPriceValue = parseFloat(data.pricing.eth_per_token).toFixed(12);
                 formatWithFontSize('ethPrice', ethPriceValue, '', ' ETH');
 
+                // Format numbers with commas
+                const formatCurrency = (value) => {
+                    const num = parseFloat(value.replace(/,/g, ''));
+                    return num.toLocaleString(undefined, {minimumFractionDigits: 0, maximumFractionDigits: 2});
+                };
+
                 document.getElementById('marketcap').textContent =
-                    '$' + data.pricing.market_cap_usd;
+                    '$' + formatCurrency(data.pricing.market_cap_usd);
                 document.getElementById('tvl').textContent =
-                    '$' + data.tvl.total_tvl_usd;
+                    '$' + formatCurrency(data.tvl.total_tvl_usd);
                 document.getElementById('volume').textContent =
-                    '$' + data.volume.volume_24h_usd;
+                    '$' + formatCurrency(data.volume.volume_24h_usd);
                 document.getElementById('volume7d').textContent =
-                    '$' + data.volume.volume_7d_usd;
+                    '$' + formatCurrency(data.volume.volume_7d_usd);
 
                 // Update additional stats with proper formatting
                 // For large whole numbers, show integers only with commas
