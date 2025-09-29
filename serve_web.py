@@ -73,6 +73,17 @@ class CORSRequestHandler(SimpleHTTPRequestHandler):
 
     def do_GET(self):
         """Handle GET requests with ETag support."""
+        # Strip /token prefix if present (for Cloudflare routing)
+        request_path = self.path
+        if request_path.startswith('/token'):
+            request_path = request_path[6:]  # Remove '/token'
+            if not request_path:
+                request_path = '/'
+
+        # Store original path for later checks
+        original_path = self.path
+        self.path = request_path
+
         # Translate path to filesystem path
         path = self.translate_path(self.path)
 
@@ -121,6 +132,10 @@ class CORSRequestHandler(SimpleHTTPRequestHandler):
 
     def do_OPTIONS(self):
         """Handle OPTIONS requests for CORS preflight."""
+        # Strip /token prefix if present (for Cloudflare routing)
+        if self.path.startswith('/token'):
+            self.path = self.path[6:] or '/'
+
         self.send_response(200)
         self.send_header('Access-Control-Allow-Origin', '*')
         self.send_header('Access-Control-Allow-Methods', 'GET, OPTIONS')

@@ -17,16 +17,16 @@
             max-width: 800px;
             margin: 0 auto;
             background: white;
-            border: 4px solid black;
+            border: 2px solid #d0d0d0;
             border-radius: 20px;
             overflow: hidden;
         }
         .header {
-            background: black;
-            color: white;
+            background: white;
+            color: black;
             padding: 30px;
             text-align: center;
-            border-bottom: 4px solid black;
+            border-bottom: 2px solid #d0d0d0;
         }
         h1 {
             margin: 0;
@@ -56,7 +56,7 @@
         .stat {
             background: white;
             padding: 20px;
-            border: 4px solid black;
+            border: 2px solid #d0d0d0;
             border-radius: 15px;
             text-align: center;
         }
@@ -74,7 +74,7 @@
         .api-endpoint {
             background: white;
             padding: 15px;
-            border: 4px solid black;
+            border: 2px solid #d0d0d0;
             border-radius: 10px;
             margin: 20px 0;
             font-family: 'Courier New', monospace;
@@ -84,7 +84,7 @@
         .status {
             display: inline-block;
             padding: 5px 10px;
-            border: 2px solid black;
+            border: 2px solid #d0d0d0;
             border-radius: 10px;
             background: white;
             color: black;
@@ -105,15 +105,15 @@
             margin-top: 20px;
             padding: 15px;
             background: white;
-            border: 4px solid black;
+            border: 2px solid #d0d0d0;
             border-radius: 10px;
             font-size: 0.9em;
             color: black;
         }
         .refresh-btn {
-            background: black;
-            color: white;
-            border: 4px solid black;
+            background: white;
+            color: black;
+            border: 2px solid #d0d0d0;
             padding: 10px 20px;
             border-radius: 10px;
             cursor: pointer;
@@ -121,7 +121,7 @@
             font-weight: bold;
         }
         .refresh-btn:hover {
-            background: white;
+            background: #f5f5f5;
             color: black;
         }
         .last-updated {
@@ -132,7 +132,7 @@
         }
         pre {
             background: white !important;
-            border: 4px solid black !important;
+            border: 2px solid #d0d0d0 !important;
             border-radius: 10px !important;
             padding: 15px !important;
             color: black !important;
@@ -140,7 +140,7 @@
         textarea {
             background: white !important;
             color: black !important;
-            border: 4px solid black !important;
+            border: 2px solid #d0d0d0 !important;
             border-radius: 10px !important;
         }
     </style>
@@ -149,10 +149,10 @@
     <div class="container">
         <div class="header">
             <h1>🪙 ROKO Token Data</h1>
-            <div class="subtitle">Real-time blockchain data API</div>
+            <div class="subtitle">Blockchain data updated every 15 minutes</div>
         </div>
         <div class="content">
-            <h2>Live Data <span class="status loading" id="status">Loading...</span></h2>
+            <h2>Token Metrics</h2>
             <div class="stats" id="stats">
                 <div class="stat">
                     <div class="stat-value" id="price">-</div>
@@ -209,6 +209,7 @@
             </div>
 
             <div class="last-updated" id="lastUpdated"></div>
+            <div style="font-size: 0.8em; color: #888; margin-top: 5px;" id="connectionStatus"></div>
 
             <h3>API Endpoint</h3>
             <div class="api-endpoint" id="endpoint"></div>
@@ -223,7 +224,7 @@
             </div>
 
             <h3>Raw JSON Data</h3>
-            <textarea id="jsonData" readonly style="width: calc(100% - 38px); height: 400px; font-family: 'Courier New', monospace; background: white; color: black; padding: 15px; border-radius: 10px; border: 4px solid black; resize: vertical; white-space: pre; overflow: auto; box-sizing: content-box;">Loading...</textarea>
+            <textarea id="jsonData" readonly style="width: calc(100% - 34px); height: 400px; font-family: 'Courier New', monospace; background: white; color: black; padding: 15px; border-radius: 10px; border: 2px solid #d0d0d0; resize: vertical; white-space: pre; overflow: auto; box-sizing: content-box;">Loading...</textarea>
 
             <button class="refresh-btn" style="margin-top: 10px;" onclick="copyToClipboard()">Copy JSON</button>
             <span id="copyStatus" style="margin-left: 10px; color: black; font-weight: bold; display: none;">✓ Copied!</span>
@@ -251,9 +252,8 @@ fetch('<span id="apiUrl"></span>')
         let lastEtag = null;
 
         async function fetchData(forceRefresh = false) {
-            const status = document.getElementById('status');
-            status.textContent = 'Checking...';
-            status.className = 'status loading';
+            const connectionStatus = document.getElementById('connectionStatus');
+            connectionStatus.textContent = '⟳ Updating...';
 
             try {
                 const headers = {};
@@ -270,8 +270,7 @@ fetch('<span id="apiUrl"></span>')
                     // Not Modified - data hasn't changed since last fetch
                     document.getElementById('cacheStatus').innerHTML =
                         '<br><strong>✅ Cache Status:</strong> Data unchanged (304 Not Modified)';
-                    status.textContent = 'Live';
-                    status.className = 'status';
+                    connectionStatus.textContent = '● Connected';
                     // Don't return - let the cached version update the display if needed
                     // This ensures the UI stays in sync even if opened with stale browser cache
                 }
@@ -394,13 +393,11 @@ fetch('<span id="apiUrl"></span>')
                         `<strong>ETag:</strong> ${truncatedEtag}`;
                 }
 
-                status.textContent = 'Live';
-                status.className = 'status';
+                connectionStatus.textContent = '● Connected';
 
             } catch (error) {
                 console.error('Error fetching data:', error);
-                status.textContent = 'Error';
-                status.className = 'status error';
+                connectionStatus.textContent = '○ Disconnected';
                 document.getElementById('cacheStatus').innerHTML =
                     `<br><strong>❌ Error:</strong> ${error.message}`;
             }
